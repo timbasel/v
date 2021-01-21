@@ -4,7 +4,7 @@ type FnCommandCallback = fn (cmd Command) ?
 
 // str returns the `string` representation of the callback.
 pub fn (f FnCommandCallback) str() string {
-	return 'FnCommandCallback=>' + ptr_str(f)
+	return 'FnCommandCallback => ' + ptr_str(f)
 }
 
 // Command is a structured representation of a single command
@@ -19,16 +19,17 @@ pub mut:
 	pre_execute      FnCommandCallback
 	execute          FnCommandCallback
 	post_execute     FnCommandCallback
+
 	disable_help     bool
 	disable_version  bool
 	disable_flags    bool
 	strict_flags     bool     = true
 	sort_flags       bool     = true
 	sort_commands    bool     = true
+
 	parent           &Command = 0
 	commands         []Command
 	flags            []Flag
-	required_args    int
 	args             []string
 }
 
@@ -133,12 +134,14 @@ pub fn (mut cmd Command) parse(args []string) {
 		cmd.add_default_flags()
 	}
 	cmd.add_default_commands()
+
 	if cmd.sort_flags {
 		cmd.flags.sort(a.name < b.name)
 	}
 	if cmd.sort_commands {
 		cmd.commands.sort(a.name < b.name)
 	}
+
 	cmd.args = args[1..]
 	if !cmd.disable_flags {
 		cmd.parse_flags()
@@ -153,6 +156,7 @@ fn (mut cmd Command) add_default_flags() {
 		use_help_abbrev := !cmd.flags.contains('h') && cmd.flags.have_abbrev()
 		cmd.add_flag(help_flag(use_help_abbrev))
 	}
+
 	if !cmd.disable_version && cmd.version != '' && !cmd.flags.contains('version') {
 		use_version_abbrev := !cmd.flags.contains('v') && cmd.flags.have_abbrev()
 		cmd.add_flag(version_flag(use_version_abbrev))
@@ -165,6 +169,7 @@ fn (mut cmd Command) add_default_commands() {
 	if !cmd.disable_help && !cmd.commands.contains('help') && cmd.is_root() {
 		cmd.add_command(help_cmd())
 	}
+
 	if !cmd.disable_version && cmd.version != '' && !cmd.commands.contains('version') {
 		cmd.add_command(version_cmd())
 	}
@@ -175,6 +180,7 @@ fn (mut cmd Command) parse_flags() {
 		if cmd.args.len < 1 || !cmd.args[0].starts_with('-') {
 			break
 		}
+
 		mut found := false
 		for i in 0 .. cmd.flags.len {
 			unsafe {
@@ -190,6 +196,7 @@ fn (mut cmd Command) parse_flags() {
 				}
 			}
 		}
+
 		if !found && cmd.strict_flags {
 			println('Command `$cmd.name` has no flag `${cmd.args[0]}`')
 			exit(1)
@@ -203,6 +210,7 @@ fn (mut cmd Command) parse_commands() {
 	global_flags := cmd.flags.filter(it.global)
 	cmd.check_help_flag()
 	cmd.check_version_flag()
+
 	for i in 0 .. cmd.args.len {
 		arg := cmd.args[i]
 		for j in 0 .. cmd.commands.len {
@@ -222,6 +230,7 @@ fn (mut cmd Command) parse_commands() {
 			return
 		}
 	}
+
 	// if no further command was found, execute current command
 	if cmd.required_args > 0 {
 		if cmd.required_args > cmd.args.len {
@@ -250,7 +259,7 @@ fn (mut cmd Command) parse_commands() {
 	}
 }
 
-pub fn (cmd Command) get_subcommand(name string) ?Command {
+pub fn (cmd Command) get_command(name string) ?Command {
 	return cmd.commands.get(name)
 }
 
