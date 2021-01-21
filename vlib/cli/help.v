@@ -71,7 +71,9 @@ fn (cmd Command) help_message() string {
 		}
 	}
 	help += '\n'
-	if cmd.description != '' {
+	if cmd.long_description != '' {
+		help += '\n$cmd.long_description\n'
+	} else if cmd.description != '' {
 		help += '\n$cmd.description\n'
 	}
 	mut abbrev_len := 0

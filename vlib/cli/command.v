@@ -11,23 +11,25 @@ pub fn (f FnCommandCallback) str() string {
 // or chain of commands.
 pub struct Command {
 pub mut:
-	name            string
-	usage           string
-	description     string
-	version         string
-	pre_execute     FnCommandCallback
-	execute         FnCommandCallback
-	post_execute    FnCommandCallback
-	disable_help    bool
-	disable_version bool
-	disable_flags   bool
-	sort_flags      bool
-	sort_commands   bool
-	parent          &Command = 0
-	commands        []Command
-	flags           []Flag
-	required_args   int
-	args            []string
+	name             string
+	usage            string
+	description      string
+	long_description string
+	version          string
+	pre_execute      FnCommandCallback
+	execute          FnCommandCallback
+	post_execute     FnCommandCallback
+	disable_help     bool
+	disable_version  bool
+	disable_flags    bool
+	strict_flags     bool     = true
+	sort_flags       bool     = true
+	sort_commands    bool     = true
+	parent           &Command = 0
+	commands         []Command
+	flags            []Flag
+	required_args    int
+	args             []string
 }
 
 // str returns the `string` representation of the `Command`.
@@ -38,9 +40,11 @@ pub fn (cmd Command) str() string {
 	res << '	usage: "$cmd.usage"'
 	res << '	version: "$cmd.version"'
 	res << '	description: "$cmd.description"'
+	res << '	long_description: "$cmd.long_description"'
 	res << '	disable_help: $cmd.disable_help'
 	res << '	disable_flags: $cmd.disable_flags'
 	res << '	disable_version: $cmd.disable_version'
+	res << '	strict_flags: $cmd.strict_flags'
 	res << '	sort_flags: $cmd.sort_flags'
 	res << '	sort_commands: $cmd.sort_commands'
 	res << '	cb execute: $cmd.execute'
@@ -186,9 +190,11 @@ fn (mut cmd Command) parse_flags() {
 				}
 			}
 		}
-		if !found {
+		if !found && cmd.strict_flags {
 			println('Command `$cmd.name` has no flag `${cmd.args[0]}`')
 			exit(1)
+		} else {
+			break
 		}
 	}
 }
@@ -243,6 +249,11 @@ fn (mut cmd Command) parse_commands() {
 		}
 	}
 }
+
+pub fn (cmd Command) get_subcommand(name string) ?Command {
+	return cmd.commands.get(name)
+}
+
 
 fn (cmd Command) check_help_flag() {
 	if !cmd.disable_help && cmd.flags.contains('help') {
