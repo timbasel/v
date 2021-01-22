@@ -140,11 +140,11 @@ fn flag_is_set_in_subcommand(cmd cli.Command) ? {
 }
 
 fn test_if_flag_gets_set_in_subcommand() {
-	mut cmd := cli.Command{
+	mut cmd := &cli.Command{
 		name: 'command'
 		execute: empty_func
 	}
-	mut subcmd := cli.Command{
+	mut subcmd := &cli.Command{
 		name: 'subcommand'
 		execute: flag_is_set_in_subcommand
 	}
@@ -166,7 +166,7 @@ fn test_if_global_flag_gets_set_in_subcommand() {
 		name: 'flag'
 		global: true
 	})
-	subcmd := cli.Command{
+	subcmd := &cli.Command{
 		name: 'subcommand'
 		execute: flag_is_set_in_subcommand
 	}
@@ -175,10 +175,10 @@ fn test_if_global_flag_gets_set_in_subcommand() {
 }
 
 fn test_command_setup() {
-	mut cmd := cli.Command{
+	mut cmd := &cli.Command{
 		name: 'root'
 		commands: [
-			cli.Command{
+			&cli.Command{
 				name: 'child'
 				commands: [
 					cli.Command{

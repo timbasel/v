@@ -1,20 +1,28 @@
 module main
 
-import cli { Command }
+import cli { Command, Flag }
 import os
 import v.pref
 
 
-fn exec_cmd() Command {
-	return Command {
+fn exec_cmd() &Command {
+ 	return &Command {
 		name: 'exec',
 		usage: '<tool>'
 		description: 'Execute a tool defined in your project.'
 		execute: exec_fn,
+		flags: [
+			Flag {
+				flag: .string
+				name: 'recompile'
+				abbrev: 'r'
+				description: 'Force the tool to be recompiled.'
+			}
+		]
 	}
 }
 
-fn exec_fn(cmd Command) {
+fn exec_fn(cmd Command)? {
 	is_verbose := cmd.flags.get_bool('verbose') or { false }
 	force_recompile := cmd.flags.get_bool('recompile') or { false }
 
@@ -22,6 +30,7 @@ fn exec_fn(cmd Command) {
 		println('no tool provided')
 		return
 	}
+
 
 	tool := cmd.args[0]
 	tool_args := escape_args(cmd.args[1..])
@@ -45,7 +54,7 @@ fn exec_fn(cmd Command) {
 			println('compiling tool \'${tool}\': \'${compile_cmd}\'')
 		}
 
-		compile_result := os.exec(compile_cmd) or { panic(err) }
+		compile_result := os.execute_or_panic(compile_cmd)
 		if compile_result.exit_code != 0 {
 			println('error: failed to compile \'${tool}\': \n${compile_result.output}')
 		}
@@ -84,7 +93,7 @@ fn tool_exists(tool string) bool {
 }
 
 fn find_vmod_path(path string) ?string {
-	content := os.ls(path) or { return error(err) }
+	content := os.ls(path) or { return err }
 
 	if content.contains('v.mod') {
 		return path

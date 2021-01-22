@@ -5,12 +5,12 @@ import cli { Command, Flag }
 import v.util
 
 fn main() {
-	mut v_cmd := Command{
-		name: 'V',
-		description: 'V is a tool for managing V source code.'
+	mut v_cmd := &Command{
+		name: 'v',
+		description: 'v is a tool for managing v source code.'
 		version: util.full_v_version(true)
 		// sort_commands: false
-		execute: main_func
+		execute: main_fn
 	}
 
 	v_cmd.add_flag(Flag {
@@ -23,6 +23,9 @@ fn main() {
 
 	v_cmd.add_command(init_cmd())
 	v_cmd.add_command(exec_cmd())
+	v_cmd.add_command(build_cmd())
+	v_cmd.add_command(fmt_cmd())
+	v_cmd.add_command(run_cmd())
 	/*
 	v_cmd.add_commands([
 		tool_cmd('fmt', 'Format the V code provided.')
@@ -49,14 +52,30 @@ fn tool_cmd(name string, description string) Command {
 }
 */
 
-fn main_func(cmd Command) {
-	if cmd.args.len > 0 {
-		if tool_exists(cmd.args[0]) {
-			mut args := ['v']
-			args << cmd.args
-			exec_cmd().parse(args)
-			return
-		}
+fn main_fn(cmd Command)? {
+	if cmd.args.len < 1 {
+		println('error: no tool or path provided.')
+		return
 	}
-	println('not found')
+
+	// try finding a tool that matches first argument
+	if tool_exists(cmd.args[0]) {
+		mut args := ['exec']
+		args << cmd.args
+
+		mut exec_cmd := cmd.get_command('exec') or { panic('failed to get \'exec\' subcommand') }
+		exec_cmd.parse(args)
+		return
+	}
+
+	if os.exists(cmd.args[0]) || os.exists(cmd.args.last()) {
+		mut args := ['build']
+		args << cmd.args
+
+		mut build_cmd := cmd.get_command('build') or { panic('failed to get \'build\' subcommand') }
+		build_cmd.parse(args)
+		return
+	}
+
+	println('error: no tool or path found.')
 }

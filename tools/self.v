@@ -1,32 +1,37 @@
 module main
 
+import cli { Command, Flag }
 import os
 import os.cmdline
 import v.pref
 import v.util.recompilation
 
 fn main() {
+	cmd := Command {
+		name: 'self'
+		description: 'Run V self-compiler'
+		execute: self_fn
+	}
+	cmd.parse(os.args)
+}
+
+fn self_fn(cmd Command) {
 	vexe := pref.vexe_path()
 	vroot := os.dir(vexe)
-	recompilation.must_be_enabled(vroot, 'Please install V from source, to use `v self` .')
+
+	recompilation.must_be_enabled(vroot, 'Please install V from source, to use \'v self\'.')
+
 	os.chdir(vroot)
 	os.setenv('VCOLORS', 'always', true)
-	self_idx := os.args.index('self')
-	args := os.args[1..self_idx]
-	jargs := args.join(' ')
-	obinary := cmdline.option(args, '-o', '')
-	sargs := if obinary != '' { jargs } else { '$jargs -o v2' }
-	cmd := '$vexe $sargs cmd/v'
-	options := if args.len > 0 { '($sargs)' } else { '' }
-	println('V self compiling ${options}...')
+
+	println('V self compiling...')
+
+	build_flags := cmd.args.join(' ')
+	cmd := '${vexe} build ${build_flags} cmd/v'
 	compile(vroot, cmd)
-	if obinary != '' {
-		// When -o was given, there is no need to backup/rename the original.
-		// The user just wants an independent copy of v, and so we are done.
-		return
-	}
 	backup_old_version_and_rename_newer() or { panic(err) }
-	println('V built successfully!')
+
+	println('V build successfully.')
 }
 
 fn compile(vroot string, cmd string) {

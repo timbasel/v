@@ -76,6 +76,7 @@ fn (cmd Command) help_message() string {
 	} else if cmd.description != '' {
 		help += '\n$cmd.description\n'
 	}
+
 	mut abbrev_len := 0
 	mut name_len := cli.min_description_indent_len
 	if cmd.flags.have_abbrev() {
@@ -94,6 +95,7 @@ fn (cmd Command) help_message() string {
 			name_len = max(name_len, command.name.len + cli.spacing)
 		}
 	}
+
 	if cmd.flags.len > 0 {
 		help += '\nFlags:\n'
 		for flag in cmd.flags {
@@ -107,6 +109,7 @@ fn (cmd Command) help_message() string {
 			} else {
 				flag_name = '-$flag.name'
 			}
+
 			mut required := ''
 			if flag.required {
 				required = ' (required)'
@@ -118,6 +121,7 @@ fn (cmd Command) help_message() string {
 				'\n'
 		}
 	}
+
 	if cmd.commands.len > 0 {
 		help += '\nCommands:\n'
 		for command in cmd.commands {
@@ -138,6 +142,7 @@ fn pretty_description(s string, indent_len int) string {
 	if indent_len > width {
 		return s
 	}
+
 	indent := ' '.repeat(indent_len)
 	chars_per_line := width - indent_len
 	// Give us enough room, better a little bigger than smaller
@@ -146,6 +151,7 @@ fn pretty_description(s string, indent_len int) string {
 		if k != 0 {
 			acc.write_string('\n$indent')
 		}
+
 		mut i := chars_per_line - 2
 		mut j := 0
 		for ; i < line.len; i += chars_per_line - 2 {

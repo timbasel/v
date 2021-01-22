@@ -4,7 +4,7 @@ type FnCommandCallback = fn (cmd Command) ?
 
 // str returns the `string` representation of the callback.
 pub fn (f FnCommandCallback) str() string {
-	return 'FnCommandCallback => ' + ptr_str(f)
+	return 'FnCommandCallback=>' + ptr_str(f)
 }
 
 // Command is a structured representation of a single command
@@ -26,6 +26,7 @@ pub mut:
 	strict_flags     bool     = true
 	sort_flags       bool     = true
 	sort_commands    bool     = true
+	required_args    int
 
 	parent           &Command = 0
 	commands         []Command
