@@ -56,6 +56,7 @@ fn print_help_for_command(help_cmd Command) ? {
 
 fn (cmd Command) help_message() string {
 	mut help := ''
+
 	help += 'Usage: $cmd.full_name()'
 	if cmd.flags.len > 0 {
 		help += ' [flags]'
@@ -70,10 +71,14 @@ fn (cmd Command) help_message() string {
 			help += ' <arg$i>'
 		}
 	}
+
 	help += '\n'
-	if cmd.description != '' {
+	if cmd.long_description != '' {
+		help += '\n$cmd.long_description\n'
+	} else if cmd.description != '' {
 		help += '\n$cmd.description\n'
 	}
+
 	mut abbrev_len := 0
 	mut name_len := cli.min_description_indent_len
 	if cmd.flags.have_abbrev() {
@@ -92,6 +97,7 @@ fn (cmd Command) help_message() string {
 			name_len = max(name_len, command.name.len + cli.spacing)
 		}
 	}
+
 	if cmd.flags.len > 0 {
 		help += '\nFlags:\n'
 		for flag in cmd.flags {
@@ -116,6 +122,7 @@ fn (cmd Command) help_message() string {
 				'\n'
 		}
 	}
+
 	if cmd.commands.len > 0 {
 		help += '\nCommands:\n'
 		for command in cmd.commands {
@@ -125,6 +132,7 @@ fn (cmd Command) help_message() string {
 				pretty_description(command.description, name_len) + '\n'
 		}
 	}
+
 	return help
 }
 
@@ -138,6 +146,7 @@ fn pretty_description(s string, indent_len int) string {
 	}
 	indent := ' '.repeat(indent_len)
 	chars_per_line := width - indent_len
+
 	// Give us enough room, better a little bigger than smaller
 	mut acc := strings.new_builder(((s.len / chars_per_line) + 1) * (width + 1))
 	for k, line in s.split('\n') {
