@@ -31,7 +31,7 @@ mut:
 }
 
 // get_all_found returns an array of all `Flag`s found in the command parameters
-pub fn (flags []Flag) get_all_found() []Flag {
+pub fn (flags []&Flag) get_all_found() []&Flag {
 	return flags.filter(it.found)
 }
 
@@ -46,7 +46,7 @@ pub fn (flag Flag) get_bool() ?bool {
 
 // get_bool returns `true` if the flag specified in `name` is set.
 // get_bool returns an error if the `FlagType` is not boolean.
-pub fn (flags []Flag) get_bool(name string) ?bool {
+pub fn (flags []&Flag) get_bool(name string) ?bool {
 	flag := flags.get(name) ?
 	return flag.get_bool()
 }
@@ -87,14 +87,14 @@ pub fn (flag Flag) get_ints() ?[]int {
 
 // get_int returns the `int` value argument of the flag specified in `name`.
 // get_int returns an error if the `FlagType` is not integer.
-pub fn (flags []Flag) get_int(name string) ?int {
+pub fn (flags []&Flag) get_int(name string) ?int {
 	flag := flags.get(name) ?
 	return flag.get_int()
 }
 
 // get_ints returns the array of `int` value argument of the flag specified in `name`.
 // get_ints returns an error if the `FlagType` is not integer.
-pub fn (flags []Flag) get_ints(name string) ?[]int {
+pub fn (flags []&Flag) get_ints(name string) ?[]int {
 	flag := flags.get(name) ?
 	return flag.get_ints()
 }
@@ -135,14 +135,14 @@ pub fn (flag Flag) get_floats() ?[]f64 {
 
 // get_float returns the `f64` value argument of the flag specified in `name`.
 // get_float returns an error if the `FlagType` is not floating point.
-pub fn (flags []Flag) get_float(name string) ?f64 {
+pub fn (flags []&Flag) get_float(name string) ?f64 {
 	flag := flags.get(name) ?
 	return flag.get_float()
 }
 
 // get_floats returns the array of `f64` value argument of the flag specified in `name`.
 // get_floats returns an error if the `FlagType` is not floating point.
-pub fn (flags []Flag) get_floats(name string) ?[]f64 {
+pub fn (flags []&Flag) get_floats(name string) ?[]f64 {
 	flag := flags.get(name) ?
 	return flag.get_floats()
 }
@@ -177,14 +177,14 @@ pub fn (flag Flag) get_strings() ?[]string {
 
 // get_string returns the `string` value argument of the flag specified in `name`.
 // get_string returns an error if the `FlagType` is not string.
-pub fn (flags []Flag) get_string(name string) ?string {
+pub fn (flags []&Flag) get_string(name string) ?string {
 	flag := flags.get(name) ?
 	return flag.get_string()
 }
 
 // get_strings returns the `string` value argument of the flag specified in `name`.
 // get_strings returns an error if the `FlagType` is not string.
-pub fn (flags []Flag) get_strings(name string) ?[]string {
+pub fn (flags []&Flag) get_strings(name string) ?[]string {
 	flag := flags.get(name) ?
 	return flag.get_strings()
 }
@@ -259,7 +259,7 @@ fn (mut flag Flag) parse_bool(args []string) ?[]string {
 
 // get returns the `Flag` matching `name` or an error
 // if it can't be found.
-fn (flags []Flag) get(name string) ?Flag {
+fn (flags []&Flag) get(name string) ?&Flag {
 	for flag in flags {
 		if flag.name == name {
 			return flag
@@ -268,7 +268,7 @@ fn (flags []Flag) get(name string) ?Flag {
 	return error('Flag `$name` not found in $flags')
 }
 
-fn (flags []Flag) contains(name string) bool {
+fn (flags []&Flag) contains(name string) bool {
 	for flag in flags {
 		if flag.name == name || flag.abbrev == name {
 			return true
@@ -277,7 +277,7 @@ fn (flags []Flag) contains(name string) bool {
 	return false
 }
 
-fn (flags []Flag) have_abbrev() bool {
+fn (flags []&Flag) have_abbrev() bool {
 	mut have_abbrev := false
 	for flag in flags {
 		if flag.abbrev != '' {

@@ -1,5 +1,13 @@
 module cli
 
+import os
+
+pub fn new() Command {
+	return Command {
+		name: os.file_name(os.args[0])
+	}
+}
+
 type FnCommandCallback = fn (cmd Command) ?
 
 // str returns the `string` representation of the callback.
@@ -29,7 +37,7 @@ pub mut:
 
 	parent          &Command = 0
 	commands        []Command
-	flags           []Flag
+	flags           []&Flag
 
 	required_args   int
 	args            []string
@@ -115,19 +123,20 @@ pub fn (mut cmd Command) setup() {
 }
 
 // add_flags adds the array `flags` to this `Command`.
-pub fn (mut cmd Command) add_flags(flags []Flag) {
+pub fn (mut cmd Command) add_flags(flags []&Flag) {
 	for flag in flags {
 		cmd.add_flag(flag)
 	}
 }
 
 // add_flag adds `flag` to this `Command`.
-pub fn (mut cmd Command) add_flag(flag Flag) {
+pub fn (mut cmd Command) add_flag(flag &Flag) &Flag {
 	if cmd.flags.contains(flag.name) {
 		println('Flag with the name `$flag.name` already exists')
 		exit(1)
 	}
 	cmd.flags << flag
+	return flag
 }
 
 // parse parses `args` into this structured `Command`.
