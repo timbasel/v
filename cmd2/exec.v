@@ -8,9 +8,11 @@ import v.pref
 fn exec_cmd() &Command {
  	return &Command {
 		name: 'exec',
+		// Comment
 		usage: '<tool>'
 		description: 'Execute a tool defined in your project.'
 		execute: exec_fn,
+		// Comment
 		flags: [
 			Flag {
 				flag: .string
