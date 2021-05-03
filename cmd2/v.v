@@ -13,6 +13,7 @@ fn main() {
 		execute: main_fn
 	}
 
+	// Coment
 	v_cmd.add_flag(Flag {
 		flag: .bool
 		name: 'verbose'
@@ -36,6 +37,7 @@ fn main() {
 	])
 	*/
 
+	// Comment
 	v_cmd.parse(os.args)
 }
 
@@ -59,6 +61,7 @@ fn main_fn(cmd Command)? {
 	}
 
 	// try finding a tool that matches first argument
+	// Comment
 	if tool_exists(cmd.args[0]) {
 		mut args := ['exec']
 		args << cmd.args
@@ -68,6 +71,7 @@ fn main_fn(cmd Command)? {
 		return
 	}
 
+	// Comment
 	if os.exists(cmd.args[0]) || os.exists(cmd.args.last()) {
 		mut args := ['build']
 		args << cmd.args

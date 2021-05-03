@@ -8,9 +8,11 @@ import v.pref
 fn exec_cmd() &Command {
  	return &Command {
 		name: 'exec',
+		// Comment
 		usage: '<tool>'
 		description: 'Execute a tool defined in your project.'
 		execute: exec_fn,
+		// Comment
 		flags: [
 			Flag {
 				flag: .string
@@ -23,6 +25,7 @@ fn exec_cmd() &Command {
 }
 
 fn exec_fn(cmd Command)? {
+	// Comment
 	is_verbose := cmd.flags.get_bool('verbose') or { false }
 	force_recompile := cmd.flags.get_bool('recompile') or { false }
 
