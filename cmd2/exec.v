@@ -23,6 +23,7 @@ fn exec_cmd() &Command {
 }
 
 fn exec_fn(cmd Command)? {
+	// Comment
 	is_verbose := cmd.flags.get_bool('verbose') or { false }
 	force_recompile := cmd.flags.get_bool('recompile') or { false }
 
