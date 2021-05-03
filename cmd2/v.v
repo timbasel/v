@@ -13,6 +13,7 @@ fn main() {
 		execute: main_fn
 	}
 
+	// Coment
 	v_cmd.add_flag(Flag {
 		flag: .bool
 		name: 'verbose'
@@ -36,6 +37,7 @@ fn main() {
 	])
 	*/
 
+	// Comment
 	v_cmd.parse(os.args)
 }
 
