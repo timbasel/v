@@ -1,12 +1,5 @@
 module cli
 
-type FnCommandCallback = fn (cmd Command) ?
-
-// str returns the `string` representation of the callback.
-pub fn (f FnCommandCallback) str() string {
-	return 'FnCommandCallback=>' + ptr_str(f)
-}
-
 // Command is a structured representation of a single command
 // or chain of commands.
 pub struct Command {
@@ -16,9 +9,7 @@ pub mut:
 	description      string
 	long_description string
 	version          string
-	pre_execute      FnCommandCallback
-	execute          FnCommandCallback
-	post_execute     FnCommandCallback
+	execute          fn(cmd Command)?
 
 	disable_help    bool
 	disable_version bool
@@ -33,37 +24,6 @@ pub mut:
 
 	required_args int
 	args          []string
-}
-
-// str returns the `string` representation of the `Command`.
-pub fn (cmd Command) str() string {
-	mut res := []string{}
-	res << 'Command{'
-	res << '	name: "$cmd.name"'
-	res << '	usage: "$cmd.usage"'
-	res << '	version: "$cmd.version"'
-	res << '	description: "$cmd.description"'
-	res << '	long_description: "$cmd.long_description"'
-	res << '	disable_help: $cmd.disable_help'
-	res << '	disable_flags: $cmd.disable_flags'
-	res << '	disable_version: $cmd.disable_version'
-	res << '  strict_flags: $cmd.strict_flags'
-	res << '	sort_flags: $cmd.sort_flags'
-	res << '	sort_commands: $cmd.sort_commands'
-	res << '	cb execute: $cmd.execute'
-	res << '	cb pre_execute: $cmd.pre_execute'
-	res << '	cb post_execute: $cmd.post_execute'
-	if cmd.parent == 0 {
-		res << '	parent: &Command(0)'
-	} else {
-		res << '	parent: &Command{$cmd.parent.name ...}'
-	}
-	res << '	commands: $cmd.commands'
-	res << '	flags: $cmd.flags'
-	res << '	required_args: $cmd.required_args'
-	res << '	args: $cmd.args'
-	res << '}'
-	return res.join('\n')
 }
 
 // is_root returns `true` if this `Command` has no parents.
@@ -244,23 +204,10 @@ fn (mut cmd Command) parse_commands() {
 	}
 
 	cmd.check_required_flags()
-	if !isnil(cmd.pre_execute) {
-		cmd.pre_execute(*cmd) or {
-			eprintln('cli preexecution error: $err')
-			exit(1)
-		}
-	}
 
 	if !isnil(cmd.execute) {
 		cmd.execute(*cmd) or {
 			eprintln('cli execution error: $err')
-			exit(1)
-		}
-	}
-
-	if !isnil(cmd.post_execute) {
-		cmd.post_execute(*cmd) or {
-			eprintln('cli postexecution error: $err')
 			exit(1)
 		}
 	}

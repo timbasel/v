@@ -14,9 +14,7 @@ fn main() {
 		description: 'Prints greeting in different languages.'
 		usage: '<name>'
 		required_args: 1
-		pre_execute: greet_pre_func
 		execute: greet_func
-		post_execute: greet_post_func
 	}
 	greet_cmd.add_flag(Flag{
 		flag: .string
@@ -67,12 +65,4 @@ fn greet_func(cmd Command) ? {
 	for f in fun {
 		println('fun: $f')
 	}
-}
-
-fn greet_pre_func(cmd Command) ? {
-	println('This is a function running before the main function.\n')
-}
-
-fn greet_post_func(cmd Command) ? {
-	println('\nThis is a function running after the main function.')
 }
