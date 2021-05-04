@@ -1,7 +1,7 @@
-import cli
+import cli { Flag }
 
 fn test_if_string_flag_parses() {
-	mut flag := cli.Flag{
+	mut flag := &Flag{
 		flag: .string
 		name: 'flag'
 	}
@@ -9,7 +9,7 @@ fn test_if_string_flag_parses() {
 	mut value := flag.get_string() or { panic(err) }
 	assert value == 'value1'
 
-	flag = cli.Flag{
+	flag = &Flag{
 		flag: .string
 		name: 'flag'
 	}
@@ -17,7 +17,7 @@ fn test_if_string_flag_parses() {
 	value = flag.get_string() or { panic(err) }
 	assert value == 'value2'
 
-	flag = cli.Flag{
+	flag = &Flag{
 		flag: .string_array
 		name: 'flag'
 	}
@@ -27,12 +27,12 @@ fn test_if_string_flag_parses() {
 	assert values == ['value1', 'value2']
 
 	flags := [
-		cli.Flag{
+		&Flag{
 			flag: .string_array
 			name: 'flag'
 			value: ['a', 'b', 'c']
 		},
-		cli.Flag{
+		&Flag{
 			flag: .string
 			name: 'flag2'
 		},
@@ -43,7 +43,7 @@ fn test_if_string_flag_parses() {
 }
 
 fn test_if_bool_flag_parses() {
-	mut flag := cli.Flag{
+	mut flag := &Flag{
 		flag: .bool
 		name: 'flag'
 	}
@@ -66,7 +66,7 @@ fn test_if_bool_flag_parses() {
 }
 
 fn test_if_int_flag_parses() {
-	mut flag := cli.Flag{
+	mut flag := &Flag{
 		flag: .int
 		name: 'flag'
 	}
@@ -76,7 +76,7 @@ fn test_if_int_flag_parses() {
 	value = flag.get_int() or { panic(err) }
 	assert value == 42
 
-	flag = cli.Flag{
+	flag = &Flag{
 		flag: .int
 		name: 'flag'
 	}
@@ -85,7 +85,7 @@ fn test_if_int_flag_parses() {
 	value = flag.get_int() or { panic(err) }
 	assert value == 45
 
-	flag = cli.Flag{
+	flag = &Flag{
 		flag: .int_array
 		name: 'flag'
 	}
@@ -96,12 +96,12 @@ fn test_if_int_flag_parses() {
 	assert values == [42, 45]
 
 	flags := [
-		cli.Flag{
+		&Flag{
 			flag: .int_array
 			name: 'flag'
 			value: ['1', '2', '3']
 		},
-		cli.Flag{
+		&Flag{
 			flag: .int
 			name: 'flag2'
 		},
@@ -112,7 +112,7 @@ fn test_if_int_flag_parses() {
 }
 
 fn test_if_float_flag_parses() {
-	mut flag := cli.Flag{
+	mut flag := &Flag{
 		flag: .float
 		name: 'flag'
 	}
@@ -121,7 +121,7 @@ fn test_if_float_flag_parses() {
 	value = flag.get_float() or { panic(err) }
 	assert value == 3.14158
 
-	flag = cli.Flag{
+	flag = &Flag{
 		flag: .float
 		name: 'flag'
 	}
@@ -130,7 +130,7 @@ fn test_if_float_flag_parses() {
 	value = flag.get_float() or { panic(err) }
 	assert value == 3.14159
 
-	flag = cli.Flag{
+	flag = &Flag{
 		flag: .float_array
 		name: 'flag'
 	}
@@ -141,12 +141,12 @@ fn test_if_float_flag_parses() {
 	assert values == [3.1, 1.3]
 
 	flags := [
-		cli.Flag{
+		&Flag{
 			flag: .float_array
 			name: 'flag'
 			value: ['1.1', '2.2', '3.3']
 		},
-		cli.Flag{
+		&Flag{
 			flag: .float
 			name: 'flag2'
 		},
@@ -157,7 +157,7 @@ fn test_if_float_flag_parses() {
 }
 
 fn test_if_flag_parses_with_abbrev() {
-	mut flag := cli.Flag{
+	mut flag := &Flag{
 		flag: .bool
 		name: 'flag'
 		abbrev: 'f'
@@ -168,7 +168,7 @@ fn test_if_flag_parses_with_abbrev() {
 	assert value == true
 
 	value = false
-	flag = cli.Flag{
+	flag = &Flag{
 		flag: .bool
 		name: 'flag'
 		abbrev: 'f'
@@ -179,7 +179,7 @@ fn test_if_flag_parses_with_abbrev() {
 }
 
 fn test_if_multiple_value_on_single_value() {
-	mut flag := cli.Flag{
+	mut flag := &Flag{
 		flag: .float
 		name: 'flag'
 	}
@@ -194,7 +194,7 @@ fn test_if_multiple_value_on_single_value() {
 }
 
 fn test_default_value() {
-	mut flag := cli.Flag{
+	mut flag := &Flag{
 		flag: .float
 		name: 'flag'
 		default_value: ['1.234']
@@ -204,7 +204,7 @@ fn test_default_value() {
 	mut value := flag.get_float() or { panic(err) }
 	assert value == 3.14158
 
-	flag = cli.Flag{
+	flag = &Flag{
 		flag: .float
 		name: 'flag'
 		default_value: ['1.234']

@@ -2,6 +2,6 @@ import cli {Command}
 import os
 
 fn main() {
-	mut cmd := Command {}
+	mut cmd := &Command {}
 	cmd.parse(os.args)
 }

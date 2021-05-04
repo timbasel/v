@@ -4,27 +4,26 @@ Usage example:
 module main
 
 import os
-import cli
+import cli { Command }
 
 fn main() {
-	mut app := cli.Command{
+	mut app := &Command{
 		name: 'example-app'
 		description: 'example-app'
-		execute: fn (cmd cli.Command) ? {
+		execute: fn (cmd &Command) ? {
 			println('hello app')
 			return
 		}
 		commands: [
-			cli.Command{
+			&Command{
 				name: 'sub'
-				execute: fn (cmd cli.Command) ? {
+				execute: fn (cmd &Command) ? {
 					println('hello subcommand')
 					return
 				}
 			},
 		]
 	}
-	app.setup()
 	app.parse(os.args)
 }
 ```

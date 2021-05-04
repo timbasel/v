@@ -26,11 +26,11 @@ fn test_import() {
 }
 
 fn test_imports_array_as_fn_arg() {
-	mut cmd := Command{
+	mut cmd := &Command{
 		name: 'module test'
 	}
-	c1 := Command{}
-	c2 := Command{
+	c1 := &Command{}
+	c2 := &Command{
 		name: 'cmd2'
 	}
 	cmd.add_commands([c1, c2])
