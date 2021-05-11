@@ -4,27 +4,26 @@ Usage example:
 module main
 
 import os
-import cli
+import cli { Command, Flag }
 
 fn main() {
-	mut app := cli.Command{
-		name: 'example-app'
-		description: 'example-app'
-		execute: fn (cmd cli.Command) ? {
-			println('hello app')
-			return
-		}
-		commands: [
-			cli.Command{
-				name: 'sub'
-				execute: fn (cmd cli.Command) ? {
-					println('hello subcommand')
-					return
-				}
-			},
-		]
+	mut cmd := &Command{
+		name: 'hello'
+		execute: greet_func
 	}
-	app.setup()
-	app.parse(os.args)
+
+	cmd.add_flag(&Flag{ flag: .int, name: 'count', abbrev: 'c', value: ['1'] })
+	cmd.add_flag(&Flag{ flag: .string, name: 'name', required: true })
+
+	cmd.parse(os.args)
+}
+
+fn greet_func(cmd &Command) ? {
+	count := cmd.flags.get_int('count') or { panic('Failed to get `count` flag: $err') }
+	name := cmd.flags.get_string('name') or { panic('Failed to get `name` flag: $err') }
+
+	for _ in 0 .. count {
+		println('Hello $name')
+	}
 }
 ```

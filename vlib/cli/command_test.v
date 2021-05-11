@@ -1,7 +1,7 @@
-import cli
+import cli { Command, Flag }
 
 fn test_if_command_parses_empty_args() {
-	mut cmd := cli.Command{
+	mut cmd := &Command{
 		name: 'command'
 		execute: empty_func
 	}
@@ -10,7 +10,7 @@ fn test_if_command_parses_empty_args() {
 }
 
 fn test_if_command_parses_args() {
-	mut cmd := cli.Command{
+	mut cmd := &Command{
 		name: 'command'
 		execute: empty_func
 	}
@@ -19,23 +19,23 @@ fn test_if_command_parses_args() {
 }
 
 fn test_if_subcommands_parse_args() {
-	mut cmd := cli.Command{
+	mut cmd := &Command{
 		name: 'command'
 	}
-	subcmd := cli.Command{
+	mut subcmd := &Command{
 		name: 'subcommand'
 		execute: if_subcommands_parse_args_func
 	}
-	cmd.add_command(subcmd)
+	cmd.add_command(mut subcmd)
 	cmd.parse(['command', 'subcommand', 'arg0', 'arg1'])
 }
 
-fn if_subcommands_parse_args_func(cmd cli.Command) ? {
+fn if_subcommands_parse_args_func(cmd &Command) ? {
 	assert cmd.name == 'subcommand' && compare_arrays(cmd.args, ['arg0', 'arg1'])
 }
 
 fn test_if_command_has_default_help_subcommand() {
-	mut cmd := cli.Command{
+	mut cmd := &Command{
 		name: 'command'
 	}
 	cmd.parse(['command'])
@@ -43,7 +43,7 @@ fn test_if_command_has_default_help_subcommand() {
 }
 
 fn test_if_command_has_default_version_subcommand_if_version_is_set() {
-	mut cmd := cli.Command{
+	mut cmd := &Command{
 		name: 'command'
 		version: '1.0.0'
 	}
@@ -51,17 +51,17 @@ fn test_if_command_has_default_version_subcommand_if_version_is_set() {
 	assert has_command(cmd, 'version')
 }
 
-fn flag_should_be_set(cmd cli.Command) ? {
+fn flag_should_be_set(cmd &Command) ? {
 	flag := cmd.flags.get_string('flag') ?
 	assert flag == 'value'
 }
 
 fn test_if_flag_gets_set() {
-	mut cmd := cli.Command{
+	mut cmd := &Command{
 		name: 'command'
 		execute: flag_should_be_set
 	}
-	cmd.add_flag(cli.Flag{
+	cmd.add_flag(&Flag{
 		flag: .string
 		name: 'flag'
 	})
@@ -69,11 +69,11 @@ fn test_if_flag_gets_set() {
 }
 
 fn test_if_flag_gets_set_with_abbrev() {
-	mut cmd := cli.Command{
+	mut cmd := &Command{
 		name: 'command'
 		execute: flag_should_be_set
 	}
-	cmd.add_flag(cli.Flag{
+	cmd.add_flag(&Flag{
 		flag: .string
 		name: 'flag'
 		abbrev: 'f'
@@ -82,11 +82,11 @@ fn test_if_flag_gets_set_with_abbrev() {
 }
 
 fn test_if_flag_gets_set_with_long_arg() {
-	mut cmd := cli.Command{
+	mut cmd := &Command{
 		name: 'command'
 		execute: flag_should_be_set
 	}
-	cmd.add_flag(cli.Flag{
+	cmd.add_flag(&Flag{
 		flag: .string
 		name: 'flag'
 		abbrev: 'f'
@@ -94,7 +94,7 @@ fn test_if_flag_gets_set_with_long_arg() {
 	cmd.parse(['command', '--flag', 'value'])
 }
 
-fn flag_should_have_value_of_42(cmd cli.Command) ? {
+fn flag_should_have_value_of_42(cmd &Command) ? {
 	flag := cmd.flags.get_string('flag') ?
 	assert flag == 'value'
 	value := cmd.flags.get_int('value') ?
@@ -102,15 +102,15 @@ fn flag_should_have_value_of_42(cmd cli.Command) ? {
 }
 
 fn test_if_multiple_flags_get_set() {
-	mut cmd := cli.Command{
+	mut cmd := &Command{
 		name: 'command'
 		execute: flag_should_have_value_of_42
 	}
-	cmd.add_flag(cli.Flag{
+	cmd.add_flag(&Flag{
 		flag: .string
 		name: 'flag'
 	})
-	cmd.add_flag(cli.Flag{
+	cmd.add_flag(&Flag{
 		flag: .int
 		name: 'value'
 	})
@@ -118,15 +118,15 @@ fn test_if_multiple_flags_get_set() {
 }
 
 fn test_if_required_flags_get_set() {
-	mut cmd := cli.Command{
+	mut cmd := &Command{
 		name: 'command'
 		execute: flag_should_have_value_of_42
 	}
-	cmd.add_flag(cli.Flag{
+	cmd.add_flag(&Flag{
 		flag: .string
 		name: 'flag'
 	})
-	cmd.add_flag(cli.Flag{
+	cmd.add_flag(&Flag{
 		flag: .int
 		name: 'value'
 		required: true
@@ -134,54 +134,54 @@ fn test_if_required_flags_get_set() {
 	cmd.parse(['command', '-flag', 'value', '-value', '42'])
 }
 
-fn flag_is_set_in_subcommand(cmd cli.Command) ? {
+fn flag_is_set_in_subcommand(cmd &Command) ? {
 	flag := cmd.flags.get_string('flag') or { panic(err) }
 	assert flag == 'value'
 }
 
 fn test_if_flag_gets_set_in_subcommand() {
-	mut cmd := cli.Command{
+	mut cmd := &Command{
 		name: 'command'
 		execute: empty_func
 	}
-	mut subcmd := cli.Command{
+	mut subcmd := &Command{
 		name: 'subcommand'
 		execute: flag_is_set_in_subcommand
 	}
-	subcmd.add_flag(cli.Flag{
+	subcmd.add_flag(&Flag{
 		flag: .string
 		name: 'flag'
 	})
-	cmd.add_command(subcmd)
+	cmd.add_command(mut subcmd)
 	cmd.parse(['command', 'subcommand', '-flag', 'value'])
 }
 
 fn test_if_global_flag_gets_set_in_subcommand() {
-	mut cmd := cli.Command{
+	mut cmd := &Command{
 		name: 'command'
 		execute: empty_func
 	}
-	cmd.add_flag(cli.Flag{
+	cmd.add_flag(&Flag{
 		flag: .string
 		name: 'flag'
 		global: true
 	})
-	subcmd := cli.Command{
+	mut subcmd := &Command{
 		name: 'subcommand'
 		execute: flag_is_set_in_subcommand
 	}
-	cmd.add_command(subcmd)
+	cmd.add_command(mut subcmd)
 	cmd.parse(['command', '-flag', 'value', 'subcommand'])
 }
 
 fn test_command_setup() {
-	mut cmd := cli.Command{
+	mut cmd := &Command{
 		name: 'root'
 		commands: [
-			cli.Command{
+			&Command{
 				name: 'child'
 				commands: [
-					cli.Command{
+					&Command{
 						name: 'child-child'
 					},
 				]
@@ -190,16 +190,16 @@ fn test_command_setup() {
 	}
 	assert isnil(cmd.commands[0].parent)
 	assert isnil(cmd.commands[0].commands[0].parent)
-	cmd.setup()
+	cmd.parse([''])
 	assert cmd.commands[0].parent.name == 'root'
 	assert cmd.commands[0].commands[0].parent.name == 'child'
 }
 
 // helper functions
-fn empty_func(cmd cli.Command) ? {
+fn empty_func(cmd &Command) ? {
 }
 
-fn has_command(cmd cli.Command, name string) bool {
+fn has_command(cmd &Command, name string) bool {
 	for subcmd in cmd.commands {
 		if subcmd.name == name {
 			return true
