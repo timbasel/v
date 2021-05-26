@@ -18,7 +18,7 @@ pub mut:
 	description      string
 	long_description string
 	version          string
-	execute          fn (&Command) ?
+	execute          fn (&Command)
 
 	disable_help    bool
 	disable_version bool
@@ -27,11 +27,14 @@ pub mut:
 	sort_flags      bool = true
 	sort_commands   bool = true
 
-	parent   &Command = 0
 	commands []&Command
 	flags    []&Flag
 
 	required_args int
+
+mut:
+	parent   &Command = 0
+
 	args          []string
 }
 
@@ -204,13 +207,6 @@ fn (mut cmd Command) parse_commands() {
 		}
 	}
 
-	if cmd.is_root() && isnil(cmd.execute) {
-		if !cmd.disable_help {
-			cmd.execute_help()
-			return
-		}
-	}
-
 	// if no further command was found, execute current command
 	if cmd.required_args > 0 {
 		if cmd.required_args > cmd.args.len {
@@ -222,10 +218,7 @@ fn (mut cmd Command) parse_commands() {
 	cmd.check_required_flags()
 
 	if !isnil(cmd.execute) {
-		cmd.execute(cmd) or {
-			eprintln('cli execution error: $err')
-			exit(1)
-		}
+		cmd.execute(cmd)
 	}
 }
 
@@ -244,7 +237,7 @@ fn (cmd &Command) check_version_flag() {
 		version_flag := cmd.flags.get_bool('version') or { return } // ignore error and handle command normally
 		if version_flag {
 			version_cmd := cmd.commands.get('version') or { return } // ignore error and handle command normally
-			version_cmd.execute(version_cmd) or { panic(err) }
+			version_cmd.execute(version_cmd)
 			exit(0)
 		}
 	}
@@ -266,7 +259,7 @@ fn (cmd &Command) check_required_flags() {
 pub fn (cmd &Command) execute_help() {
 	if cmd.commands.contains('help') {
 		help_cmd := cmd.commands.get('help') or { return } // ignore error and handle command normally
-		help_cmd.execute(help_cmd) or { panic(err) }
+		help_cmd.execute(help_cmd)
 	} else {
 		print(cmd.help_message())
 	}
