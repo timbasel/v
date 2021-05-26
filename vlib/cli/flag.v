@@ -1,6 +1,7 @@
 module cli
 
-pub enum FlagType {
+pub enum FlagKind {
+	unknown
 	bool
 	int
 	float
@@ -17,7 +18,7 @@ pub enum FlagType {
 [heap]
 pub struct Flag {
 pub mut:
-	flag FlagType
+	kind FlagKind
 	// Name of flag
 	name string
 	// Like short option
@@ -28,7 +29,7 @@ pub mut:
 	// If flag is requierd
 	required bool
 	// Default value if no value provide by command line
-	default_value []string = []
+	default []string = []
 mut:
 	// Set true if flag found.
 	found bool
@@ -44,8 +45,8 @@ pub fn (flags []&Flag) get_all_found() []&Flag {
 // get_bool returns `true` if the flag is set.
 // get_bool returns an error if the `FlagType` is not boolean.
 pub fn (flag &Flag) get_bool() ?bool {
-	if flag.flag != .bool {
-		return error('$flag.name: Invalid flag type `$flag.flag`, expected `bool`')
+	if flag.kind != .bool {
+		return error('$flag.name: Invalid flag type `$flag.kind`, expected `bool`')
 	}
 
 	val := flag.get_value_or_default_value()
@@ -63,8 +64,8 @@ pub fn (flags []&Flag) get_bool(name string) ?bool {
 // get_int returns the `int` value argument of the flag.
 // get_int returns an error if the `FlagType` is not integer.
 pub fn (flag &Flag) get_int() ?int {
-	if flag.flag != .int {
-		return error('$flag.name: Invalid flag type `$flag.flag`, expected `int`')
+	if flag.kind != .int {
+		return error('$flag.name: Invalid flag type `$flag.kind`, expected `int`')
 	}
 
 	val := flag.get_value_or_default_value()
@@ -79,8 +80,8 @@ pub fn (flag &Flag) get_int() ?int {
 // get_ints returns the array of `int` value argument of the flag specified in `name`.
 // get_ints returns an error if the `FlagType` is not integer.
 pub fn (flag &Flag) get_ints() ?[]int {
-	if flag.flag != .int_array {
-		return error('$flag.name: Invalid flag type `$flag.flag`, expected `int_array`')
+	if flag.kind != .int_array {
+		return error('$flag.name: Invalid flag type `$flag.kind`, expected `int_array`')
 	}
 
 	val := flag.get_value_or_default_value()
@@ -115,8 +116,8 @@ pub fn (flags []&Flag) get_ints(name string) ?[]int {
 // get_float returns the `f64` value argument of the flag.
 // get_float returns an error if the `FlagType` is not floating point.
 pub fn (flag &Flag) get_float() ?f64 {
-	if flag.flag != .float {
-		return error('$flag.name: Invalid flag type `$flag.flag`, expected `float`')
+	if flag.kind != .float {
+		return error('$flag.name: Invalid flag type `$flag.kind`, expected `float`')
 	}
 
 	val := flag.get_value_or_default_value()
@@ -131,8 +132,8 @@ pub fn (flag &Flag) get_float() ?f64 {
 // get_floats returns the `f64` value argument of the flag.
 // get_floats returns an error if the `FlagType` is not floating point.
 pub fn (flag &Flag) get_floats() ?[]f64 {
-	if flag.flag != .float_array {
-		return error('$flag.name: Invalid flag type `$flag.flag`, expected `float_array`')
+	if flag.kind != .float_array {
+		return error('$flag.name: Invalid flag type `$flag.kind`, expected `float_array`')
 	}
 
 	val := flag.get_value_or_default_value()
@@ -167,8 +168,8 @@ pub fn (flags []&Flag) get_floats(name string) ?[]f64 {
 // get_string returns the `string` value argument of the flag.
 // get_string returns an error if the `FlagType` is not string.
 pub fn (flag &Flag) get_string() ?string {
-	if flag.flag != .string {
-		return error('$flag.name: Invalid flag type `$flag.flag`, expected `string`')
+	if flag.kind != .string {
+		return error('$flag.name: Invalid flag type `$flag.kind`, expected `string`')
 	}
 
 	val := flag.get_value_or_default_value()
@@ -183,8 +184,8 @@ pub fn (flag &Flag) get_string() ?string {
 // get_strings returns the array of `string` value argument of the flag.
 // get_strings returns an error if the `FlagType` is not string.
 pub fn (flag &Flag) get_strings() ?[]string {
-	if flag.flag != .string_array {
-		return error('$flag.name: Invalid flag type `$flag.flag`, expected `string_array`')
+	if flag.kind != .string_array {
+		return error('$flag.name: Invalid flag type `$flag.kind`, expected `string_array`')
 	}
 
 	val := flag.get_value_or_default_value()
@@ -214,13 +215,13 @@ pub fn (flags []&Flag) get_strings(name string) ?[]string {
 // an array of arguments with all consumed elements removed.
 fn (mut flag Flag) parse(args []string, with_abbrev bool) ?[]string {
 	if flag.matches(args, with_abbrev) {
-		if flag.flag == .bool {
+		if flag.kind == .bool {
 			new_args := flag.parse_bool(args) ?
 			return new_args
 		} else {
-			if flag.value.len > 0 && flag.flag != .int_array && flag.flag != .float_array
-				&& flag.flag != .string_array {
-				return error('The argument `$flag.name` accept only one value!')
+			if flag.value.len > 0 && flag.kind != .int_array && flag.kind != .float_array
+				&& flag.kind != .string_array {
+				return error('The argument `$flag.name` accepts only one value!')
 			}
 
 			new_args := flag.parse_raw(args) ?
@@ -302,9 +303,9 @@ fn (flags []&Flag) have_abbrev() bool {
 
 // Check if value is set by command line option. If not, return default value.
 fn (flag &Flag) get_value_or_default_value() []string {
-	if flag.value.len == 0 && flag.default_value.len > 0 {
+	if flag.value.len == 0 && flag.default.len > 0 {
 		// If default value is set and no value provide, use default value.
-		return flag.default_value
+		return flag.default
 	} else {
 		return flag.value
 	}

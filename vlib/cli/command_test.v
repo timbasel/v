@@ -62,7 +62,7 @@ fn test_if_flag_gets_set() {
 		execute: flag_should_be_set
 	}
 	cmd.add_flag(&Flag{
-		flag: .string
+		kind: .string
 		name: 'flag'
 	})
 	cmd.parse(['command', '-flag', 'value'])
@@ -74,7 +74,7 @@ fn test_if_flag_gets_set_with_abbrev() {
 		execute: flag_should_be_set
 	}
 	cmd.add_flag(&Flag{
-		flag: .string
+		kind: .string
 		name: 'flag'
 		abbrev: 'f'
 	})
@@ -87,7 +87,7 @@ fn test_if_flag_gets_set_with_long_arg() {
 		execute: flag_should_be_set
 	}
 	cmd.add_flag(&Flag{
-		flag: .string
+		kind: .string
 		name: 'flag'
 		abbrev: 'f'
 	})
@@ -107,11 +107,11 @@ fn test_if_multiple_flags_get_set() {
 		execute: flag_should_have_value_of_42
 	}
 	cmd.add_flag(&Flag{
-		flag: .string
+		kind: .string
 		name: 'flag'
 	})
 	cmd.add_flag(&Flag{
-		flag: .int
+		kind: .int
 		name: 'value'
 	})
 	cmd.parse(['command', '-flag', 'value', '-value', '42'])
@@ -123,11 +123,11 @@ fn test_if_required_flags_get_set() {
 		execute: flag_should_have_value_of_42
 	}
 	cmd.add_flag(&Flag{
-		flag: .string
+		kind: .string
 		name: 'flag'
 	})
 	cmd.add_flag(&Flag{
-		flag: .int
+		kind: .int
 		name: 'value'
 		required: true
 	})
@@ -149,7 +149,7 @@ fn test_if_flag_gets_set_in_subcommand() {
 		execute: flag_is_set_in_subcommand
 	}
 	subcmd.add_flag(&Flag{
-		flag: .string
+		kind: .string
 		name: 'flag'
 	})
 	cmd.add_command(mut subcmd)
@@ -162,7 +162,7 @@ fn test_if_global_flag_gets_set_in_subcommand() {
 		execute: empty_func
 	}
 	cmd.add_flag(&Flag{
-		flag: .string
+		kind: .string
 		name: 'flag'
 		global: true
 	})

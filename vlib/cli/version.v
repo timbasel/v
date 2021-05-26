@@ -2,7 +2,7 @@ module cli
 
 fn version_flag(with_abbrev bool) &Flag {
 	return &Flag{
-		flag: .bool
+		kind: .bool
 		name: 'version'
 		abbrev: if with_abbrev { 'v' } else { '' }
 		description: 'Prints version information.'

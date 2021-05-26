@@ -11,7 +11,7 @@ const (
 
 fn help_flag(with_abbrev bool) &Flag {
 	return &Flag{
-		flag: .bool
+		kind: .bool
 		name: 'help'
 		abbrev: if with_abbrev { 'h' } else { '' }
 		description: 'Prints help information.'
