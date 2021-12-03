@@ -1,74 +1,41 @@
 module cli
 
-import term
-
-type FnCommandCallback = fn (cmd Command) ?
-
-// str returns the `string` representation of the callback.
-pub fn (f FnCommandCallback) str() string {
-	return 'FnCommandCallback=>' + ptr_str(f)
-}
-
 // Command is a structured representation of a single command
 // or chain of commands.
+[heap]
 pub struct Command {
 pub mut:
-	name            string
-	usage           string
-	description     string
-	version         string
-	pre_execute     FnCommandCallback
-	execute         FnCommandCallback
-	post_execute    FnCommandCallback
+	name        string
+	usage       string
+	description string
+	version     string
+	execute     fn (cmd &Command) ?
+
+	strict_flags    bool = true
+	posix_mode      bool = true
 	disable_help    bool
 	disable_version bool
 	disable_flags   bool
 	sort_flags      bool
 	sort_commands   bool
-	parent          &Command = 0
-	commands        []Command
-	flags           []Flag
-	required_args   int
-	args            []string
-	posix_mode      bool
-}
 
-// str returns the `string` representation of the `Command`.
-pub fn (cmd Command) str() string {
-	mut res := []string{}
-	res << 'Command{'
-	res << '	name: "$cmd.name"'
-	res << '	usage: "$cmd.usage"'
-	res << '	version: "$cmd.version"'
-	res << '	description: "$cmd.description"'
-	res << '	disable_help: $cmd.disable_help'
-	res << '	disable_flags: $cmd.disable_flags'
-	res << '	disable_version: $cmd.disable_version'
-	res << '	sort_flags: $cmd.sort_flags'
-	res << '	sort_commands: $cmd.sort_commands'
-	res << '	cb execute: $cmd.execute'
-	res << '	cb pre_execute: $cmd.pre_execute'
-	res << '	cb post_execute: $cmd.post_execute'
-	if cmd.parent == 0 {
-		res << '	parent: &Command(0)'
-	} else {
-		res << '	parent: &Command{$cmd.parent.name ...}'
-	}
-	res << '	commands: $cmd.commands'
-	res << '	flags: $cmd.flags'
-	res << '	required_args: $cmd.required_args'
-	res << '	args: $cmd.args'
-	res << '}'
-	return res.join('\n')
+	required_args int
+
+	commands []&Command
+	flags    []&Flag
+	args     []string
+
+	parent  &Command = 0
+	verbose bool // for debug only: prints parsing information for command
 }
 
 // is_root returns `true` if this `Command` has no parents.
-pub fn (cmd Command) is_root() bool {
+pub fn (cmd &Command) is_root() bool {
 	return isnil(cmd.parent)
 }
 
 // root returns the root `Command` of the command chain.
-pub fn (cmd Command) root() Command {
+pub fn (cmd &Command) root() &Command {
 	if cmd.is_root() {
 		return cmd
 	}
@@ -76,79 +43,126 @@ pub fn (cmd Command) root() Command {
 }
 
 // full_name returns the full `string` representation of all commands int the chain.
-pub fn (cmd Command) full_name() string {
+pub fn (cmd &Command) full_name() string {
 	if cmd.is_root() {
 		return cmd.name
 	}
 	return cmd.parent.full_name() + ' $cmd.name'
 }
 
-// add_commands adds the `commands` array of `Command`s as sub-commands.
-pub fn (mut cmd Command) add_commands(commands []Command) {
-	for command in commands {
-		cmd.add_command(command)
-	}
-}
-
-// add_command adds `command` as a sub-command of this `Command`.
-pub fn (mut cmd Command) add_command(command Command) {
-	mut subcmd := command
+// add_command adds a subcommand to the commands; returns reference of the provided subcommand
+pub fn (mut cmd Command) add_command(subcmd &Command) &Command {
 	if cmd.commands.contains(subcmd.name) {
-		eprintln_exit('Command with the name `$subcmd.name` already exists')
+		println('cli error: Command with the name `$subcmd.name` already exists')
+		exit(1)
 	}
-	subcmd.parent = unsafe { cmd }
 	cmd.commands << subcmd
+	return subcmd
 }
 
-// setup ensures that all sub-commands of this `Command`
-// is linked as a chain.
-pub fn (mut cmd Command) setup() {
-	for mut subcmd in cmd.commands {
-		subcmd.parent = unsafe { cmd }
-		subcmd.posix_mode = cmd.posix_mode
-		subcmd.setup()
+// add_commands adds the `commands` array of `command`s as subcommands.
+pub fn (mut cmd Command) add_commands(subcmds []&Command) {
+	for subcmd in subcmds {
+		cmd.add_command(subcmd)
 	}
+}
+
+// add_flag adds a flag to the command; returns reference of the provided flag
+pub fn (mut cmd Command) add_flag(flag &Flag) &Flag {
+	if cmd.flags.contains(flag.name) {
+		println('Flag with the name `$flag.name` already exists')
+		exit(1)
+	}
+	cmd.flags << flag
+	return flag
 }
 
 // add_flags adds the array `flags` to this `Command`.
-pub fn (mut cmd Command) add_flags(flags []Flag) {
+pub fn (mut cmd Command) add_flags(flags []&Flag) {
 	for flag in flags {
 		cmd.add_flag(flag)
 	}
 }
 
-// add_flag adds `flag` to this `Command`.
-pub fn (mut cmd Command) add_flag(flag Flag) {
-	if cmd.flags.contains(flag.name) {
-		eprintln_exit('Flag with the name `$flag.name` already exists')
+pub fn (mut cmd Command) parse(args []string) ? {
+	if cmd.is_root() {
+		cmd.setup()
 	}
-	cmd.flags << flag
+
+	mut i := 1 // skip program name
+	for i < args.len {
+		mut arg := args[i]
+
+		if cmd.commands.contains(arg) { // command
+			if cmd.verbose {
+				println('$cmd.name - found command: $arg')
+			}
+			mut subcmd := cmd.commands.get(arg) or {
+				panic('cli error: failed to get command `$arg` that should exist')
+			}
+			return subcmd.parse(args[i..])
+		} else if arg == '--' { // flag terminator
+			if cmd.verbose {
+				println('$cmd.name - found terminator')
+			}
+			cmd.args << args[(i + 1)..]
+			break
+		} else if arg.starts_with('-') {
+			if cmd.verbose {
+				println('$cmd.name - found flag: $arg')
+			}
+			i += cmd.flags.parse(args[i..], cmd.strict_flags) ?
+		} else {
+			if cmd.verbose {
+				println('$cmd.name - found argument: $arg')
+			}
+			cmd.args << arg
+		}
+
+		i++ // advance to next argument
+	}
+
+	cmd.check_default_flags() ?
+	cmd.check_required_flags() ?
+
+	if !isnil(cmd.execute) {
+		cmd.execute(cmd) ?
+	}
 }
 
-// parse parses `args` into this structured `Command`.
-pub fn (mut cmd Command) parse(args []string) {
+fn (mut cmd Command) setup() {
 	if !cmd.disable_flags {
 		cmd.add_default_flags()
 	}
 	cmd.add_default_commands()
+
+	for mut flag in cmd.flags {
+		flag.setup()
+	}
+
 	if cmd.sort_flags {
 		cmd.flags.sort(a.name < b.name)
 	}
 	if cmd.sort_commands {
 		cmd.commands.sort(a.name < b.name)
 	}
-	cmd.args = args[1..]
-	if !cmd.disable_flags {
-		cmd.parse_flags()
+
+	for mut subcmd in cmd.commands {
+		subcmd.parent = cmd
+		subcmd.posix_mode = cmd.posix_mode // TODO: remove
+		subcmd.verbose = cmd.verbose
+
+		for global_flag in cmd.flags.filter(it.global) {
+			subcmd.add_flag(global_flag)
+		}
+
+		subcmd.setup()
 	}
-	cmd.parse_commands()
 }
 
-// add_default_flags adds the commonly used `-h`/`--help` and
-// `-v`/`--version` flags to the `Command`.
 fn (mut cmd Command) add_default_flags() {
 	if !cmd.disable_help && !cmd.flags.contains('help') {
-		use_help_abbrev := !cmd.flags.contains('h') && cmd.posix_mode
+		use_help_abbrev := !cmd.flags.contains('h')
 		cmd.add_flag(help_flag(use_help_abbrev))
 	}
 	if !cmd.disable_version && cmd.version != '' && !cmd.flags.contains('version') {
@@ -157,8 +171,6 @@ fn (mut cmd Command) add_default_flags() {
 	}
 }
 
-// add_default_commands adds the command functions of the
-// commonly used `help` and `version` flags to the `Command`.
 fn (mut cmd Command) add_default_commands() {
 	if !cmd.disable_help && !cmd.commands.contains('help') && cmd.is_root() {
 		cmd.add_command(help_cmd())
@@ -168,137 +180,50 @@ fn (mut cmd Command) add_default_commands() {
 	}
 }
 
-fn (mut cmd Command) parse_flags() {
-	for {
-		if cmd.args.len < 1 || !cmd.args[0].starts_with('-') {
-			break
-		}
-		mut found := false
-		for i in 0 .. cmd.flags.len {
-			unsafe {
-				mut flag := &cmd.flags[i]
-				if flag.matches(cmd.args, cmd.posix_mode) {
-					found = true
-					flag.found = true
-					cmd.args = flag.parse(cmd.args, cmd.posix_mode) or {
-						eprintln_exit('Failed to parse flag `${cmd.args[0]}`: $err')
-					}
-					break
-				}
-			}
-		}
-		if !found {
-			eprintln_exit('Command `$cmd.name` has no flag `${cmd.args[0]}`')
-		}
-	}
-}
-
-fn (mut cmd Command) parse_commands() {
-	global_flags := cmd.flags.filter(it.global)
-	cmd.check_help_flag()
-	cmd.check_version_flag()
-	for i in 0 .. cmd.args.len {
-		arg := cmd.args[i]
-		for j in 0 .. cmd.commands.len {
-			mut command := cmd.commands[j]
-			if command.name == arg {
-				for flag in global_flags {
-					command.add_flag(flag)
-				}
-				command.parse(cmd.args[i..])
-				return
-			}
-		}
-	}
-	if cmd.is_root() && isnil(cmd.execute) {
-		if !cmd.disable_help {
-			cmd.execute_help()
-			return
-		}
-	}
-	// if no further command was found, execute current command
-	if cmd.required_args > 0 {
-		if cmd.required_args > cmd.args.len {
-			eprintln_exit('Command `$cmd.name` needs at least $cmd.required_args arguments')
-		}
-	}
-	cmd.check_required_flags()
-
-	cmd.handle_cb(cmd.pre_execute, 'preexecution')
-	cmd.handle_cb(cmd.execute, 'execution')
-	cmd.handle_cb(cmd.post_execute, 'postexecution')
-}
-
-fn (mut cmd Command) handle_cb(cb FnCommandCallback, label string) {
-	if !isnil(cb) {
-		cb(*cmd) or {
-			label_message := term.ecolorize(term.bright_red, 'cli $label error:')
-			eprintln_exit('$label_message $err')
-		}
-	}
-}
-
-fn (cmd Command) check_help_flag() {
+fn (cmd &Command) check_default_flags() ? {
 	if !cmd.disable_help && cmd.flags.contains('help') {
-		help_flag := cmd.flags.get_bool('help') or { return } // ignore error and handle command normally
+		help_flag := cmd.flags.get_bool('help') ?
 		if help_flag {
-			cmd.execute_help()
+			cmd.execute_help() ?
 			exit(0)
 		}
-	}
-}
-
-fn (cmd Command) check_version_flag() {
-	if !cmd.disable_version && cmd.version != '' && cmd.flags.contains('version') {
-		version_flag := cmd.flags.get_bool('version') or { return } // ignore error and handle command normally
+	} else if !cmd.disable_version && cmd.version != '' && cmd.flags.contains('version') {
+		version_flag := cmd.flags.get_bool('version') ?
 		if version_flag {
-			version_cmd := cmd.commands.get('version') or { return } // ignore error and handle command normally
-			version_cmd.execute(version_cmd) or { panic(err) }
+			version_cmd := cmd.commands.get('version') ?
+			version_cmd.execute(version_cmd) ?
 			exit(0)
 		}
 	}
 }
 
-fn (cmd Command) check_required_flags() {
+fn (cmd &Command) check_required_flags() ? {
 	for flag in cmd.flags {
-		if flag.required && flag.value.len == 0 {
-			full_name := cmd.full_name()
-			eprintln_exit('Flag `$flag.name` is required by `$full_name`')
+		if flag.required && !flag.found {
+			return error('cli error: flag `$flag.name` is required by `$cmd.full_name()')
 		}
 	}
 }
 
-// execute_help executes the callback registered
-// for the `-h`/`--help` flag option.
-pub fn (cmd Command) execute_help() {
+pub fn (cmd &Command) execute_help() ? {
 	if cmd.commands.contains('help') {
-		help_cmd := cmd.commands.get('help') or { return } // ignore error and handle command normally
-		help_cmd.execute(help_cmd) or { panic(err) }
+		help_cmd := cmd.commands.get('help') ?
+		help_cmd.execute(help_cmd) ?
 	} else {
 		print(cmd.help_message())
 	}
 }
 
-fn (cmds []Command) get(name string) ?Command {
+fn (cmds []&Command) get(name string) ?&Command {
 	for cmd in cmds {
 		if cmd.name == name {
 			return cmd
 		}
 	}
-	return error('Command `$name` not found in $cmds')
+	return error('cli error: no command `$name` found')
 }
 
-fn (cmds []Command) contains(name string) bool {
-	for cmd in cmds {
-		if cmd.name == name {
-			return true
-		}
-	}
-	return false
-}
-
-[noreturn]
-fn eprintln_exit(message string) {
-	eprintln(message)
-	exit(1)
+fn (cmds []&Command) contains(name string) bool {
+	cmds.get(name) or { return false }
+	return true
 }

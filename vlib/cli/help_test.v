@@ -1,65 +1,65 @@
 module cli
 
 fn test_help_message() {
-	mut cmd := Command{
-		name: 'command'
+	mut cmd := &Command{
+		name: 'cmd'
 		description: 'description'
 		commands: [
-			Command{
-				name: 'sub'
+			&Command{
+				name: 'subcmd1'
 				description: 'subcommand'
 			},
-			Command{
-				name: 'sub2'
+			&Command{
+				name: 'subcmd2'
 				description: 'another subcommand'
 			},
 		]
 		flags: [
-			Flag{
-				flag: .string
+			&Flag{
+				kind: .string
 				name: 'str'
-				description: 'str flag'
+				description: 'string flag'
 			},
-			Flag{
-				flag: .bool
+			&Flag{
+				kind: .bool
 				name: 'bool'
 				description: 'bool flag'
 				abbrev: 'b'
 			},
-			Flag{
-				flag: .string
+			&Flag{
+				kind: .string
 				name: 'required'
 				abbrev: 'r'
 				required: true
 			},
 		]
 	}
-	assert cmd.help_message() == r'Usage: command [flags] [commands]
+	assert cmd.help_message() == r'Usage: cmd [flags] [commands]
 
 description
 
 Flags:
-      -str            str flag
-  -b  -bool           bool flag
-  -r  -required       (required)
-
-Commands:
-  sub                 subcommand
-  sub2                another subcommand
-'
-
-	cmd.posix_mode = true
-	assert cmd.help_message() == r'Usage: command [flags] [commands]
-
-description
-
-Flags:
-      --str           str flag
+      --str           string flag
   -b  --bool          bool flag
   -r  --required      (required)
 
 Commands:
-  sub                 subcommand
-  sub2                another subcommand
+  subcmd1             subcommand
+  subcmd2             another subcommand
+'
+
+	cmd.posix_mode = false
+	assert cmd.help_message() == r'Usage: cmd [flags] [commands]
+
+description
+
+Flags:
+      -str            string flag
+  -b  -bool           bool flag
+  -r  -required       (required)
+
+Commands:
+  subcmd1             subcommand
+  subcmd2             another subcommand
 '
 }

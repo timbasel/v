@@ -9,18 +9,18 @@ const (
 	spacing                    = 2
 )
 
-fn help_flag(with_abbrev bool) Flag {
-	sabbrev := if with_abbrev { 'h' } else { '' }
-	return Flag{
-		flag: .bool
+fn help_flag(with_abbrev bool) &Flag {
+	return &Flag{
+		kind: .bool
 		name: 'help'
-		abbrev: sabbrev
+		abbrev: if with_abbrev { 'h' } else { '' }
+		value: false
 		description: 'Prints help information.'
 	}
 }
 
-fn help_cmd() Command {
-	return Command{
+fn help_cmd() &Command {
+	return &Command{
 		name: 'help'
 		usage: '<command>'
 		description: 'Prints help information.'
@@ -28,14 +28,14 @@ fn help_cmd() Command {
 	}
 }
 
-pub fn print_help_for_command(help_cmd Command) ? {
+pub fn print_help_for_command(help_cmd &Command) ? {
 	if help_cmd.args.len > 0 {
 		mut cmd := help_cmd.parent
 		for arg in help_cmd.args {
 			mut found := false
-			for sub_cmd in cmd.commands {
-				if sub_cmd.name == arg {
-					cmd = unsafe { &sub_cmd }
+			for subcmd in cmd.commands {
+				if subcmd.name == arg {
+					cmd = subcmd
 					found = true
 					break
 				}
@@ -54,7 +54,7 @@ pub fn print_help_for_command(help_cmd Command) ? {
 	}
 }
 
-pub fn (cmd Command) help_message() string {
+pub fn (cmd &Command) help_message() string {
 	mut help := ''
 	help += 'Usage: $cmd.full_name()'
 	if cmd.flags.len > 0 {
