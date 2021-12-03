@@ -54,35 +54,8 @@ fn (mut flag Flag) setup() {
 	}
 }
 
-fn (mut flag Flag) parse(args []string) ?int {
-	if flag.value_undefined() {
-		flag.setup()
-	}
-	if args.len == 0 {
-		return 0
-	}
-
-	split := args[0].split_nth('=', 2)
-	flag.found = true
-
-	if split.len == 2 {
-		// --flag=value
-		flag.parse_value([split[1]]) ?
-	} else if args.len >= 2 {
-		// --flag arg0 arg1 ...
-		return flag.parse_value(args[1..])
-	} else if flag.kind == .bool {
-		// --flag
-		flag.parse_value(['true']) ?
-	} else {
-		return error('cli error: flag `$flag.name` requires an argument value')
-	}
-
-	return 0
-}
-
 // parses the value as the specified flag type and returns the number of parsed arguments
-fn (mut flag Flag) parse_value(args []string) ?int {
+fn (mut flag Flag) parse(args []string) ?int {
 	match flag.kind {
 		.bool {
 			flag.parse_bool(args[0]) ?
@@ -110,9 +83,15 @@ fn (mut flag Flag) parse_value(args []string) ?int {
 }
 
 fn (flags []&Flag) parse(args []string, strict bool) ?int {
+	if args.len == 0 {
+		return error('cli error: no arguments given to parse')
+	}
+	flags.setup()
+
 	split := args[0].split_nth('=', 2)
 	mut arg := split[0]
-	if arg.starts_with('--') {
+
+	if arg.starts_with('--') { // long flag
 		mut flag := flags.get(arg[2..]) or { // `flag`
 			flags.get(arg) or { // `--flag`
 				if !strict {
@@ -121,13 +100,43 @@ fn (flags []&Flag) parse(args []string, strict bool) ?int {
 				return error('cli error: no flag `$arg` found')
 			}
 		}
-		return flag.parse(args)
+		flag.found = true
+
+		if split.len == 2 {
+			// --flag=value
+			flag.parse([split[1]]) ?
+		} else if flag.kind == .bool {
+			// --flag
+			flag.parse(['true']) ?
+		} else if args.len >= 2 {
+			// --flag arg0 arg1 ...
+			return flag.parse(args[1..])
+		} else {
+			return error('cli error: flag `$flag.name` requires an argument value')
+		}
+		return 0
+
 	} else if arg.starts_with('-') {
 		if flags.contains(arg) { // custom flag
 			mut flag := flags.get(arg) or { // `-flag`
 				panic('cli error: failed to get command `$arg` that should exist')
 			}
-			return flag.parse(args)
+			flag.found = true
+
+			if split.len == 2 {
+				// -flag=value
+				flag.parse([split[1]]) ?
+			} else if flag.kind == .bool {
+				// -flag
+				flag.parse(['true']) ?
+			} else if args.len >= 2 {
+				// -flag arg0 arg1 ...
+				return flag.parse(args[1..])
+			} else {
+				return error('cli error: flag `$flag.name` requires an argument value')
+			}
+			return 0
+
 		} else { // short flag
 			arg = args[0][1..] // trim leading `-`
 
@@ -137,16 +146,14 @@ fn (flags []&Flag) parse(args []string, strict bool) ?int {
 				}
 				return error('cli error: no flag `$arg` found')
 			}
+			flag.found = true
 
 			if arg.len > 2 && arg[1] == `=` {
 				// -f=value
-				flag.parse_value([arg[2..]]) ?
-			} else if args.len >= 2 {
-				// -f value
-				return flag.parse_value(args[1..])
+				flag.parse([arg[2..]]) ?
 			} else if flag.kind == .bool {
 				// -f
-				flag.parse_value(['true']) ?
+				flag.parse(['true']) ?
 				arg = arg[1..]
 
 				for arg.len > 0 { // parse combined boolean flags
@@ -159,19 +166,31 @@ fn (flags []&Flag) parse(args []string, strict bool) ?int {
 					if flag.kind != .bool {
 						return error('cli error: can not combine non boolean flags')
 					}
-					flag.parse_value(['true']) ?
+					flag.found = true
+					flag.parse(['true']) ?
 					arg = arg[1..]
 				}
+			} else if args.len >= 2 {
+				// -f value
+				return flag.parse(args[1..])
 			} else if arg.len > 1 {
 				// -fvalue
-				flag.parse_value([arg[1..]]) ?
-				return 0
+				flag.parse([arg[1..]]) ?
 			} else {
 				return error('cli error: flag `$flag.name` (abbrev: `$flag.abbrev`) requires an argument value')
 			}
 		}
 	}
 	return 0
+}
+
+fn (flags []&Flag) setup() {
+	for i in 0..flags.len {
+		mut flag := flags[i]
+		if flag.value_undefined() {
+			flag.setup()
+		}
+	}
 }
 
 fn (flags []&Flag) get(name string) ?&Flag {
