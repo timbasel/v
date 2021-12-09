@@ -2,7 +2,7 @@ import cli { Flag }
 
 const strict = true
 
-fn test_if_long_int_flag_parses()? {
+fn test_if_long_int_flag_parses() ? {
 	mut flag := &Flag{
 		kind: .int
 		name: 'flag'
@@ -19,7 +19,7 @@ fn test_if_long_int_flag_parses()? {
 	assert flag.get_int() ? == 2
 }
 
-fn test_if_custom_int_flag_parses()? {
+fn test_if_custom_int_flag_parses() ? {
 	mut flag := &Flag{
 		kind: .int
 		name: '-flag'
@@ -36,7 +36,7 @@ fn test_if_custom_int_flag_parses()? {
 	assert flag.get_int() ? == 2
 }
 
-fn test_if_abbrev_int_flag_parses()? {
+fn test_if_abbrev_int_flag_parses() ? {
 	mut flag := &Flag{
 		kind: .int
 		name: 'flag'
@@ -57,7 +57,7 @@ fn test_if_abbrev_int_flag_parses()? {
 	assert flag.get_int() ? == 3
 }
 
-fn test_if_int_default_value_is_set()? {
+fn test_if_int_default_value_is_set() ? {
 	mut flag := &Flag{
 		kind: .int
 		name: 'flag'
@@ -79,7 +79,7 @@ fn test_if_int_default_value_is_set()? {
 	assert flag.get_int() ? == 7
 }
 
-fn test_if_long_int_array_flag_parses()? {
+fn test_if_long_int_array_flag_parses() ? {
 	mut flag := &Flag{
 		kind: .int_array
 		name: 'flag'
@@ -98,11 +98,11 @@ fn test_if_long_int_array_flag_parses()? {
 	assert flag.get_int_array() ? == [3, 4]
 
 	flag.setup() // clear array
-	flags.parse(['--flag', '5,' '6'], strict) ?
+	flags.parse(['--flag', '5,', '6'], strict) ?
 	assert flag.get_int_array() ? == [5, 6]
 }
 
-fn test_if_custom_int_array_flag_parses()? {
+fn test_if_custom_int_array_flag_parses() ? {
 	mut flag := &Flag{
 		kind: .int_array
 		name: '-flag'
@@ -121,11 +121,11 @@ fn test_if_custom_int_array_flag_parses()? {
 	assert flag.get_int_array() ? == [3, 4]
 
 	flag.setup() // clear array
-	flags.parse(['-flag', '5,' '6'], strict) ?
+	flags.parse(['-flag', '5,', '6'], strict) ?
 	assert flag.get_int_array() ? == [5, 6]
 }
 
-fn test_if_abbrev_int_array_flag_parses()? {
+fn test_if_abbrev_int_array_flag_parses() ? {
 	mut flag := &Flag{
 		kind: .int_array
 		name: 'flag'
@@ -147,10 +147,9 @@ fn test_if_abbrev_int_array_flag_parses()? {
 	flag.setup() // clear array
 	flags.parse(['-f5,6'], strict) ?
 	assert flag.get_int_array() ? == [5, 6]
-
 }
 
-fn test_if_int_array_default_value_is_set()? {
+fn test_if_int_array_default_value_is_set() ? {
 	mut flag := &Flag{
 		kind: .int_array
 		name: 'flag'

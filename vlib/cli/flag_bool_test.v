@@ -2,7 +2,7 @@ import cli { Flag }
 
 const strict = true
 
-fn test_if_long_bool_flag_parses()? {
+fn test_if_long_bool_flag_parses() ? {
 	mut flag := &Flag{
 		kind: .bool
 		name: 'flag'
@@ -22,7 +22,7 @@ fn test_if_long_bool_flag_parses()? {
 	assert flag.get_bool() ? == false
 }
 
-fn test_if_custom_bool_flag_parses()? {
+fn test_if_custom_bool_flag_parses() ? {
 	mut flag := &Flag{
 		kind: .bool
 		name: '-flag'
@@ -42,8 +42,7 @@ fn test_if_custom_bool_flag_parses()? {
 	assert flag.get_bool() ? == false
 }
 
-
-fn test_if_abbrev_bool_flag_parses()? {
+fn test_if_abbrev_bool_flag_parses() ? {
 	mut flag := &Flag{
 		kind: .bool
 		name: 'flag'
@@ -64,7 +63,7 @@ fn test_if_abbrev_bool_flag_parses()? {
 	assert flag.get_bool() ? == false
 }
 
-fn test_if_bool_default_value_is_set()? {
+fn test_if_bool_default_value_is_set() ? {
 	mut flag := &Flag{
 		kind: .bool
 		name: 'flag'
@@ -87,12 +86,12 @@ fn test_if_bool_default_value_is_set()? {
 }
 
 fn test_if_combined_bool_flags_parse() ? {
-	mut flag_a := &Flag {
+	mut flag_a := &Flag{
 		kind: .bool
 		name: 'flag-a'
 		abbrev: 'a'
 	}
-	mut flag_b := &Flag {
+	mut flag_b := &Flag{
 		kind: .bool
 		name: 'flag-b'
 		abbrev: 'b'

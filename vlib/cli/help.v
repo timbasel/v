@@ -74,34 +74,24 @@ pub fn (cmd &Command) help_message() string {
 	if cmd.description != '' {
 		help += '\n$cmd.description\n'
 	}
+
 	mut abbrev_len := 0
 	mut name_len := cli.min_description_indent_len
-	if cmd.posix_mode {
-		for flag in cmd.flags {
-			if flag.abbrev != '' {
-				abbrev_len = max(abbrev_len, flag.abbrev.len + cli.spacing + 1) // + 1 for '-' in front
-			}
-			name_len = max(name_len, abbrev_len + flag.name.len + cli.spacing + 2) // + 2 for '--' in front
+	for flag in cmd.flags {
+		if flag.abbrev != '' {
+			abbrev_len = max(abbrev_len, flag.abbrev.len + cli.spacing + 1) // + 1 for '-' in front
 		}
-		for command in cmd.commands {
-			name_len = max(name_len, command.name.len + cli.spacing)
-		}
-	} else {
-		for flag in cmd.flags {
-			if flag.abbrev != '' {
-				abbrev_len = max(abbrev_len, flag.abbrev.len + cli.spacing + 1) // + 1 for '-' in front
-			}
-			name_len = max(name_len, abbrev_len + flag.name.len + cli.spacing + 1) // + 1 for '-' in front
-		}
-		for command in cmd.commands {
-			name_len = max(name_len, command.name.len + cli.spacing)
-		}
+		name_len = max(name_len, abbrev_len + flag.name.len + cli.spacing + 2) // + 2 for '--' in front
 	}
+	for command in cmd.commands {
+		name_len = max(name_len, command.name.len + cli.spacing)
+	}
+
 	if cmd.flags.len > 0 {
 		help += '\nFlags:\n'
 		for flag in cmd.flags {
 			mut flag_name := ''
-			prefix := if cmd.posix_mode { '--' } else { '-' }
+			prefix := if flag.name.starts_with('-') { '' } else { '--' }
 			if flag.abbrev != '' {
 				abbrev_indent := ' '.repeat(abbrev_len - flag.abbrev.len - 1) // - 1 for '-' in front
 				flag_name = '-$flag.abbrev$abbrev_indent$prefix$flag.name'

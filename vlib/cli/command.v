@@ -6,13 +6,13 @@ module cli
 pub struct Command {
 pub mut:
 	name        string
+	aliases     []string
 	usage       string
 	description string
 	version     string
 	execute     fn (cmd &Command) ?
 
 	strict_flags    bool = true
-	posix_mode      bool = true
 	disable_help    bool
 	disable_version bool
 	disable_flags   bool
@@ -56,6 +56,12 @@ pub fn (mut cmd Command) add_command(subcmd &Command) &Command {
 		println('cli error: Command with the name `$subcmd.name` already exists')
 		exit(1)
 	}
+	for alias in subcmd.aliases {
+		if cmd.commands.contains(alias) {
+			println('cli error: Command with the name `$alias` already exists')
+			exit(1)
+		}
+	}
 	cmd.commands << subcmd
 	return subcmd
 }
@@ -69,9 +75,15 @@ pub fn (mut cmd Command) add_commands(subcmds []&Command) {
 
 // add_flag adds a flag to the command; returns reference of the provided flag
 pub fn (mut cmd Command) add_flag(flag &Flag) &Flag {
-	if cmd.flags.contains(flag.name) {
+	if cmd.flags.contains(flag.name) || cmd.flags.contains_abbrev(flag.abbrev) {
 		println('Flag with the name `$flag.name` already exists')
 		exit(1)
+	}
+	for alias in flag.aliases {
+		if cmd.flags.contains(alias) || cmd.flags.contains_abbrev(alias) {
+			println('Flag with the name `$flag.name` already exists')
+			exit(1)
+		}
 	}
 	cmd.flags << flag
 	return flag
@@ -127,6 +139,8 @@ pub fn (mut cmd Command) parse(args []string) ? {
 
 	if !isnil(cmd.execute) {
 		cmd.execute(cmd) ?
+	} else if cmd.commands.len > 0 {
+		cmd.execute_help() ?
 	}
 }
 
@@ -149,7 +163,6 @@ fn (mut cmd Command) setup() {
 
 	for mut subcmd in cmd.commands {
 		subcmd.parent = cmd
-		subcmd.posix_mode = cmd.posix_mode // TODO: remove
 		subcmd.verbose = cmd.verbose
 
 		for global_flag in cmd.flags.filter(it.global) {
@@ -166,16 +179,17 @@ fn (mut cmd Command) add_default_flags() {
 		cmd.add_flag(help_flag(use_help_abbrev))
 	}
 	if !cmd.disable_version && cmd.version != '' && !cmd.flags.contains('version') {
-		use_version_abbrev := !cmd.flags.contains('v') && cmd.posix_mode
+		use_version_abbrev := !cmd.flags.contains('v')
 		cmd.add_flag(version_flag(use_version_abbrev))
 	}
 }
 
 fn (mut cmd Command) add_default_commands() {
-	if !cmd.disable_help && !cmd.commands.contains('help') && cmd.is_root() {
+	if !cmd.disable_help && !cmd.commands.contains('help') && cmd.is_root() && cmd.commands.len > 0 {
 		cmd.add_command(help_cmd())
 	}
-	if !cmd.disable_version && cmd.version != '' && !cmd.commands.contains('version') {
+	if !cmd.disable_version && cmd.version != '' && !cmd.commands.contains('version')
+		&& cmd.commands.len > 0 {
 		cmd.add_command(version_cmd())
 	}
 }
@@ -200,7 +214,7 @@ fn (cmd &Command) check_default_flags() ? {
 fn (cmd &Command) check_required_flags() ? {
 	for flag in cmd.flags {
 		if flag.required && !flag.found {
-			return error('cli error: flag `$flag.name` is required by `$cmd.full_name()')
+			return error('cli error: flag `$flag.name` is required by `$cmd.full_name()`')
 		}
 	}
 }
@@ -217,6 +231,8 @@ pub fn (cmd &Command) execute_help() ? {
 fn (cmds []&Command) get(name string) ?&Command {
 	for cmd in cmds {
 		if cmd.name == name {
+			return cmd
+		} else if cmd.aliases.contains(name) {
 			return cmd
 		}
 	}

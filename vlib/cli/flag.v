@@ -20,6 +20,7 @@ pub struct Flag {
 pub mut:
 	kind        FlagKind [required]
 	name        string
+	aliases     []string
 	abbrev      string
 	description string
 	global      bool
@@ -187,6 +188,10 @@ fn (flags []&Flag) get(name string) ?&Flag {
 }
 
 fn (flags []&Flag) get_abbrev(abbrev string) ?&Flag {
+	if abbrev == '' {
+		return error('cli error: no abbrev given.')
+	}
+
 	for flag in flags {
 		if flag.abbrev == abbrev {
 			return flag

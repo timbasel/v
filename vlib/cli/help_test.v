@@ -18,19 +18,31 @@ fn test_help_message() {
 			&Flag{
 				kind: .string
 				name: 'str'
-				description: 'string flag'
+				description: 'a string flag'
 			},
 			&Flag{
 				kind: .bool
 				name: 'bool'
-				description: 'bool flag'
+				description: 'a bool flag'
 				abbrev: 'b'
 			},
 			&Flag{
 				kind: .string
 				name: 'required'
 				abbrev: 'r'
+				description: 'a required flag'
 				required: true
+			},
+			&Flag{
+				kind: .string
+				name: '-custom'
+				description: 'a custom flag'
+			},
+			&Flag{
+				kind: .string
+				name: '--custom-abbrev'
+				abbrev: 'c'
+				description: 'another custom flag'
 			},
 		]
 	}
@@ -39,27 +51,14 @@ fn test_help_message() {
 description
 
 Flags:
-      --str           string flag
-  -b  --bool          bool flag
-  -r  --required      (required)
+      --str              a string flag
+  -b  --bool             a bool flag
+  -r  --required         a required flag (required)
+      -custom            a custom flag
+  -c  --custom-abbrev    another custom flag
 
 Commands:
-  subcmd1             subcommand
-  subcmd2             another subcommand
-'
-
-	cmd.posix_mode = false
-	assert cmd.help_message() == r'Usage: cmd [flags] [commands]
-
-description
-
-Flags:
-      -str            string flag
-  -b  -bool           bool flag
-  -r  -required       (required)
-
-Commands:
-  subcmd1             subcommand
-  subcmd2             another subcommand
+  subcmd1                subcommand
+  subcmd2                another subcommand
 '
 }

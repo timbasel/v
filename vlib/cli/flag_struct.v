@@ -35,13 +35,15 @@ pub fn (mut cmd Command) add_flag_struct<T>() {
 
 		for attr in field.attrs {
 			value := attr.split(':')[1].trim_space()
-			if attr.starts_with('cli_abbrev:') {
+			if attr.starts_with('cli.name:') {
+				flag.name = value
+			} else if attr.starts_with('cli.abbrev:') {
 				flag.abbrev = value
-			} else if attr.starts_with('cli_description:') {
+			} else if attr.starts_with('cli.description:') {
 				flag.description = value
-			} else if attr.starts_with('cli_global:') {
+			} else if attr.starts_with('cli.global:') {
 				flag.global = if value.to_lower() == 'true' { true } else { false }
-			} else if attr.starts_with('cli_required:') {
+			} else if attr.starts_with('cli.required:') {
 				flag.required = if value.to_lower() == 'true' { true } else { false }
 			}
 		}
@@ -53,7 +55,14 @@ pub fn (mut cmd Command) add_flag_struct<T>() {
 pub fn (flags []&Flag) get_struct<T>() ?T {
 	mut res := T{}
 	$for field in T.fields {
-		flag := flags.get(field.name) ?
+		name_attrs := field.attrs.filter(it.starts_with('cli.name:'))
+		name := if name_attrs.len > 0 {
+			name_attrs[0].split(':')[1].trim_space()
+		} else {
+			field.name
+		}
+
+		flag := flags.get(name) ?
 		$if field.typ is bool {
 			res.$(field.name) = flag.get_bool() ?
 		} $else $if field.typ is int {
