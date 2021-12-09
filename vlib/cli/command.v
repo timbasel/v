@@ -1,5 +1,13 @@
 module cli
 
+import os
+
+pub fn new() &Command {
+	return &Command{
+		name: os.file_name(os.args[0])
+	}
+}
+
 // Command is a structured representation of a single command
 // or chain of commands.
 [heap]
@@ -52,14 +60,16 @@ pub fn (cmd &Command) full_name() string {
 
 // add_command adds a subcommand to the commands; returns reference of the provided subcommand
 pub fn (mut cmd Command) add_command(subcmd &Command) &Command {
-	if cmd.commands.contains(subcmd.name) {
-		println('cli error: Command with the name `$subcmd.name` already exists')
-		exit(1)
+	if cmd.name == '' {
+		panic("cli error: command name can't be empty")
+	} else if cmd.name.contains(' ') {
+		panic('cli error: comand name must be a single word')
+	} else if cmd.commands.contains(subcmd.name) {
+		panic('cli error: Command with the name `$subcmd.name` already exists')
 	}
 	for alias in subcmd.aliases {
 		if cmd.commands.contains(alias) {
-			println('cli error: Command with the name `$alias` already exists')
-			exit(1)
+			panic('cli error: Command with the name `$alias` already exists')
 		}
 	}
 	cmd.commands << subcmd
@@ -76,13 +86,11 @@ pub fn (mut cmd Command) add_commands(subcmds []&Command) {
 // add_flag adds a flag to the command; returns reference of the provided flag
 pub fn (mut cmd Command) add_flag(flag &Flag) &Flag {
 	if cmd.flags.contains(flag.name) || cmd.flags.contains_abbrev(flag.abbrev) {
-		println('Flag with the name `$flag.name` already exists')
-		exit(1)
+		panic('Flag with the name `$flag.name` already exists')
 	}
 	for alias in flag.aliases {
 		if cmd.flags.contains(alias) || cmd.flags.contains_abbrev(alias) {
-			println('Flag with the name `$flag.name` already exists')
-			exit(1)
+			panic('Flag with the name `$flag.name` already exists')
 		}
 	}
 	cmd.flags << flag

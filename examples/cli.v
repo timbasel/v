@@ -2,77 +2,104 @@ module main
 
 import cli { Command, Flag }
 import os
+import time
 
 fn main() {
-	mut cmd := Command{
-		name: 'cli'
-		description: 'An example of the cli library.'
-		version: '1.0.0'
+	// define a root command
+	mut cmd := &Command{
+		name: 'git'
 	}
-	mut greet_cmd := Command{
-		name: 'greet'
-		description: 'Prints greeting in different languages.'
-		usage: '<name>'
-		required_args: 1
-		pre_execute: greet_pre_func
-		execute: greet_func
-		post_execute: greet_post_func
-	}
-	greet_cmd.add_flag(Flag{
-		flag: .string
-		required: true
-		name: 'language'
-		abbrev: 'l'
-		description: 'Language of the message.'
+	// add a flag to root command
+	quiet_flag := cmd.add_flag(&Flag{
+		kind: .bool
+		name: 'quiet'
+		description: 'Only print error messages'
+		abbrev: 'q'
+		global: true // flag is added to all subcommands
+		default: false // default value of the flag
 	})
-	greet_cmd.add_flag(Flag{
-		flag: .int
-		name: 'times'
-		default_value: ['3']
-		description: 'Number of times the message gets printed.'
-	})
-	greet_cmd.add_flag(Flag{
-		flag: .string_array
-		name: 'fun'
-		description: 'Just a dumby flags to show multiple.'
-	})
-	cmd.add_command(greet_cmd)
-	cmd.setup()
-	cmd.parse(os.args)
-}
 
-fn greet_func(cmd Command) ? {
-	language := cmd.flags.get_string('language') or { panic('Failed to get `language` flag: $err') }
-	times := cmd.flags.get_int('times') or { panic('Failed to get `times` flag: $err') }
-	name := cmd.args[0]
-	for _ in 0 .. times {
-		match language {
-			'english', 'en' {
-				println('Welcome $name')
+	// add a subcommand to the root command
+	cmd.add_command(&Command{
+		name: 'init'
+		usage: '<directory>' // description of argumemnt usage
+		description: 'Initializes a new repository'
+		execute: fn (cmd &Command) ? { // you can use either named or anonymous functions for `execute`
+			quiet := cmd.flags.get_bool('quiet') ? // get global flag
+			if cmd.args.len < 1 {
+				return error('cli error: directory argument required')
 			}
-			'german', 'de' {
-				println('Willkommen $name')
-			}
-			'dutch', 'nl' {
-				println('Welkom $name')
-			}
-			else {
-				println('Unsupported language')
-				println('Supported languages are `english`, `german` and `dutch`.')
-				break
+			if !quiet {
+				println('Initializes new repository in ${cmd.args[0]}')
+				// ...
 			}
 		}
+	})
+	// NOTE: for more complex CLIs it can be helpful to split the command creation into seperate functions
+	cmd.add_command(add_cmd())
+	cmd.add_command(commit_cmd())
+
+	start := time.now()
+
+	// Parse arguments and if a matching command is found its execute function is called
+	cmd.parse(os.args) or {
+		println(err)
+		exit(1)
 	}
-	fun := cmd.flags.get_strings('fun') or { panic('Failed to get `fun` flag: $err') }
-	for f in fun {
-		println('fun: $f')
+
+	// you can access the value of the flags after `cmd.parse` is called
+	quiet := quiet_flag.get_bool() or { panic(err) }
+	if !quiet {
+		println('\nExecution Time: ${f64(time.since(start).microseconds()) / 1000}ms')
 	}
 }
 
-fn greet_pre_func(cmd Command) ? {
-	println('This is a function running before the main function.\n')
+fn add_cmd() &Command {
+	mut add_cmd := &Command{
+		name: 'add'
+		usage: '<path>...'
+		description: 'Add file contents to the index'
+		execute: add_fn
+	}
+	return add_cmd
 }
 
-fn greet_post_func(cmd Command) ? {
-	println('\nThis is a function running after the main function.')
+fn add_fn(cmd &Command) ? {
+	if cmd.args.len < 1 {
+		return error('cli error: `$cmd.name` does require at least one path argument')
+	}
+	for arg in cmd.args {
+		println('$arg added')
+	}
+	// ...
+}
+
+// Flags can also be defined as an annotated struct
+struct CommitFlags {
+	amend   bool   [cli.aliases: 'fixup,reword']
+	message string [cli.abbrev: 'm']
+	// ...
+}
+
+fn commit_cmd() &Command {
+	mut commit_cmd := &Command{
+		name: 'commit'
+		usage: '<path>...'
+		description: 'Record changes to the repository'
+		execute: commit_fn
+	}
+	// add flags in struct to the command
+	commit_cmd.add_flag_struct<CommitFlags>()
+	return commit_cmd
+}
+
+fn commit_fn(cmd &Command) ? {
+	flags := cmd.flags.get_struct<CommitFlags>() ?
+
+	if flags.amend {
+		println('Amend commit: \'$flags.message\'...')
+	} else {
+		println('Commit: \'$flags.message\'')
+	}
+	// ...
 }
