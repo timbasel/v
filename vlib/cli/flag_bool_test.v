@@ -56,10 +56,34 @@ fn test_if_abbrev_bool_flag_parses() ? {
 	flags.parse(['-f'], strict) ?
 	assert flag.get_bool() ? == true
 
+	flags.parse(['-f=false'], strict) ?
+	assert flag.get_bool() ? == false
+
 	flags.parse(['-f=true'], strict) ?
 	assert flag.get_bool() ? == true
+}
 
-	flags.parse(['-f=false'], strict) ?
+fn test_if_aliased_bool_flag_parses() ? {
+	mut flag := &Flag{
+		kind: .bool
+		name: 'flag'
+		aliases: ['foo', 'bar']
+	}
+	mut flags := [flag]
+
+	flags.parse([''], strict) ?
+	assert flag.get_bool() ? == false
+
+	flags.parse(['--foo'], strict) ?
+	assert flag.get_bool() ? == true
+
+	flags.parse(['--foo=false'], strict) ?
+	assert flag.get_bool() ? == false
+
+	flags.parse(['--bar'], strict) ?
+	assert flag.get_bool() ? == true
+
+	flags.parse(['--bar=false'], strict) ?
 	assert flag.get_bool() ? == false
 }
 

@@ -19,7 +19,7 @@ pub enum FlagKind {
 pub struct Flag {
 pub mut:
 	kind        FlagKind [required]
-	name        string
+	name        string   [required]
 	aliases     []string
 	abbrev      string
 	description string
@@ -181,6 +181,8 @@ fn (flags []&Flag) parse(args []string, strict bool) ?int {
 fn (flags []&Flag) get(name string) ?&Flag {
 	for flag in flags {
 		if flag.name == name {
+			return flag
+		} else if flag.aliases.contains(name) {
 			return flag
 		}
 	}

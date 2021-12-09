@@ -57,6 +57,24 @@ fn test_if_abbrev_float_flag_parses() ? {
 	assert flag.get_float() ? == 3.5
 }
 
+fn test_if_aliased_float_flag_parses() ? {
+	mut flag := &Flag{
+		kind: .float
+		name: 'flag'
+		aliases: ['foo', 'bar']
+	}
+	mut flags := [flag]
+
+	flags.parse([''], strict) ?
+	assert flag.get_float() ? == 0
+
+	flags.parse(['--foo=1.5'], strict) ?
+	assert flag.get_float() ? == 1.5
+
+	flags.parse(['--bar', '2.5'], strict) ?
+	assert flag.get_float() ? == 2.5
+}
+
 fn test_if_float_default_value_is_set() ? {
 	mut flag := &Flag{
 		kind: .float
@@ -149,6 +167,26 @@ fn test_if_abbrev_float_array_flag_parses() ? {
 	assert flag.get_float_array() ? == [5.5, 6.6]
 }
 
+fn test_if_aliased_float_array_flag_parses() ? {
+	mut flag := &Flag{
+		kind: .float_array
+		name: 'flag'
+		aliases: ['foo', 'bar']
+	}
+	mut flags := [flag]
+
+	flags.parse([''], strict) ?
+	assert flag.get_float_array() ? == []
+
+	flag.setup() // clear array
+	flags.parse(['--foo=1.1,2.2'], strict) ?
+	assert flag.get_float_array() ? == [1.1, 2.2]
+
+	flag.setup() // clear array
+	flags.parse(['--bar', '3.3,4.4'], strict) ?
+	assert flag.get_float_array() ? == [3.3, 4.4]
+}
+
 fn test_if_float_array_default_value_is_set() ? {
 	mut flag := &Flag{
 		kind: .float_array
@@ -170,3 +208,4 @@ fn test_if_float_array_default_value_is_set() ? {
 	flags.parse([''], strict) ?
 	assert flag.get_float_array() ? == [1.2345, 6.789]
 }
+

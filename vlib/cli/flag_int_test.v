@@ -57,6 +57,24 @@ fn test_if_abbrev_int_flag_parses() ? {
 	assert flag.get_int() ? == 3
 }
 
+fn test_if_aliased_int_flag_parses() ? {
+	mut flag := &Flag{
+		kind: .int
+		name: 'flag'
+		aliases: ['foo', 'bar']
+	}
+	mut flags := [flag]
+
+	flags.parse([''], strict) ?
+	assert flag.get_int() ? == 0
+
+	flags.parse(['--foo=1'], strict) ?
+	assert flag.get_int() ? == 1
+
+	flags.parse(['--bar', '2'], strict) ?
+	assert flag.get_int() ? == 2
+}
+
 fn test_if_int_default_value_is_set() ? {
 	mut flag := &Flag{
 		kind: .int
@@ -149,6 +167,26 @@ fn test_if_abbrev_int_array_flag_parses() ? {
 	assert flag.get_int_array() ? == [5, 6]
 }
 
+fn test_if_aliased_int_array_flag_parses() ? {
+	mut flag := &Flag{
+		kind: .int_array
+		name: 'flag'
+		aliases: ['foo', 'bar']
+	}
+	mut flags := [flag]
+
+	flags.parse([''], strict) ?
+	assert flag.get_int_array() ? == []
+
+	flag.setup() // clear array
+	flags.parse(['--foo=1,2'], strict) ?
+	assert flag.get_int_array() ? == [1, 2]
+
+	flag.setup() // clear array
+	flags.parse(['--bar', '3,4'], strict) ?
+	assert flag.get_int_array() ? == [3, 4]
+}
+
 fn test_if_int_array_default_value_is_set() ? {
 	mut flag := &Flag{
 		kind: .int_array
@@ -170,3 +208,4 @@ fn test_if_int_array_default_value_is_set() ? {
 	flags.parse([''], strict) ?
 	assert flag.get_int_array() ? == [1234, 5678]
 }
+

@@ -1,17 +1,17 @@
 import cli { Command, Flag }
 
-fn test_if_command_parses_empty_args() {
+fn test_if_command_parses_empty_args() ? {
 	mut cmd := &Command{
 		name: 'cmd'
 		execute: fn (cmd &Command) ? {}
 	}
-	cmd.parse(['cmd']) or { panic(err) }
+	cmd.parse(['cmd']) ?
 
 	assert cmd.name == 'cmd'
 	assert compare_arrays(cmd.args, [])
 }
 
-fn test_if_command_is_executed() {
+fn test_if_command_is_executed() ? {
 	mut called := false
 
 	mut cmd := &Command{
@@ -30,7 +30,7 @@ fn test_if_command_is_executed() {
 	assert called == true
 }
 
-fn test_if_command_parses_args() {
+fn test_if_command_parses_args() ? {
 	mut cmd := &Command{
 		name: 'cmd'
 		execute: fn (cmd &Command) ? {
@@ -38,10 +38,10 @@ fn test_if_command_parses_args() {
 			assert compare_arrays(cmd.args, ['arg0', 'arg1'])
 		}
 	}
-	cmd.parse(['cmd', 'arg0', 'arg1']) or { panic(err) }
+	cmd.parse(['cmd', 'arg0', 'arg1']) ?
 }
 
-fn test_if_subcommand_is_executed() {
+fn test_if_subcommand_is_executed() ? {
 	mut called := false
 
 	mut cmd := &Command{
@@ -63,7 +63,7 @@ fn test_if_subcommand_is_executed() {
 	assert called == true
 }
 
-fn test_if_correct_subcommand_is_executed() {
+fn test_if_correct_subcommand_is_executed() ? {
 	mut subcmd1_called := false
 	mut subcmd2_called := false
 
@@ -116,7 +116,7 @@ fn test_if_correct_subcommand_is_executed() {
 	assert subcmd2_called == true
 }
 
-fn test_if_aliased_subcommand_is_executed() {
+fn test_if_aliased_subcommand_is_executed() ? {
 	mut called := false
 
 	mut cmd := &Command{
@@ -139,7 +139,7 @@ fn test_if_aliased_subcommand_is_executed() {
 	assert called == true
 }
 
-fn test_if_subcommands_parse_args() {
+fn test_if_subcommands_parse_args() ? {
 	mut cmd := &Command{
 		name: 'cmd'
 	}
@@ -151,41 +151,45 @@ fn test_if_subcommands_parse_args() {
 		}
 	}
 	cmd.add_command(subcmd)
-	cmd.parse(['cmd', 'subcmd', 'arg0', 'arg1']) or { panic(err) }
+	cmd.parse(['cmd', 'subcmd', 'arg0', 'arg1']) ?
 }
 
-fn test_if_command_has_default_help_command_if_it_has_subcommnds() {
+fn test_if_command_has_default_help_command_if_it_has_subcommnds() ? {
 	mut cmd := &Command{
 		name: 'cmd'
 	}
-	cmd.add_command(&Command{})
-	cmd.parse(['cmd']) or { panic(err) }
+	cmd.add_command(&Command{
+		name: 'subcmd'
+	})
+	cmd.parse(['cmd']) ?
 
 	assert has_command(cmd, 'help')
 }
 
-fn test_if_command_has_default_version_command_if_it_has_version_and_subcommands() {
+fn test_if_command_has_default_version_command_if_it_has_version_and_subcommands() ? {
 	mut cmd := &Command{
 		name: 'cmd'
 		version: '1.0.0'
 	}
-	cmd.add_command(&Command{})
-	cmd.parse(['cmd']) or { panic(err) }
+	cmd.add_command(&Command{
+		name: 'subcmd'
+	})
+	cmd.parse(['cmd']) ?
 
 	assert has_command(cmd, 'version')
 }
 
-fn test_if_command_has_no_default_commands_if_no_subcommand_is_added() {
+fn test_if_command_has_no_default_commands_if_no_subcommand_is_added() ? {
 	mut cmd := &Command{
 		name: 'cmd'
 		version: '1.0.0'
 	}
-	cmd.parse(['cmd']) or { panic(err) }
+	cmd.parse(['cmd']) ?
 
 	assert cmd.commands.len == 0
 }
 
-fn test_if_flag_gets_set() {
+fn test_if_flag_gets_set() ? {
 	mut cmd := &Command{
 		name: 'cmd'
 		execute: string_flag_is_set_fn
@@ -194,10 +198,10 @@ fn test_if_flag_gets_set() {
 		kind: .string
 		name: 'string'
 	})
-	cmd.parse(['cmd', '--string', 'foo']) or { panic(err) }
+	cmd.parse(['cmd', '--string', 'foo']) ?
 }
 
-fn test_if_flag_gets_set_with_abbrev() {
+fn test_if_flag_gets_set_with_abbrev() ? {
 	mut cmd := &Command{
 		name: 'cmd'
 		execute: string_flag_is_set_fn
@@ -207,10 +211,10 @@ fn test_if_flag_gets_set_with_abbrev() {
 		name: 'string'
 		abbrev: 's'
 	})
-	cmd.parse(['cmd', '-s', 'foo']) or { panic(err) }
+	cmd.parse(['cmd', '-s', 'foo']) ?
 }
 
-fn test_if_flag_gets_set_with_long_arg() {
+fn test_if_flag_gets_set_with_long_arg() ? {
 	mut cmd := &Command{
 		name: 'cmd'
 		execute: string_flag_is_set_fn
@@ -220,10 +224,10 @@ fn test_if_flag_gets_set_with_long_arg() {
 		name: 'string'
 		abbrev: 'f'
 	})
-	cmd.parse(['cmd', '--string', 'foo']) or { panic(err) }
+	cmd.parse(['cmd', '--string', 'foo']) ?
 }
 
-fn test_if_multiple_flags_get_set() {
+fn test_if_multiple_flags_get_set() ? {
 	mut cmd := &Command{
 		name: 'cmd'
 		execute: fn (cmd &Command) ? {
@@ -239,10 +243,10 @@ fn test_if_multiple_flags_get_set() {
 		kind: .int
 		name: 'int'
 	})
-	cmd.parse(['cmd', '--string', 'foo', '--int', '42']) or { panic(err) }
+	cmd.parse(['cmd', '--string', 'foo', '--int', '42']) ?
 }
 
-fn test_if_required_flags_get_set() {
+fn test_if_required_flags_get_set() ? {
 	mut cmd := &Command{
 		name: 'cmd'
 		execute: fn (cmd &Command) ? {
@@ -259,10 +263,10 @@ fn test_if_required_flags_get_set() {
 		name: 'int'
 		required: true
 	})
-	cmd.parse(['cmd', '--string', 'foo', '--int', '42']) or { panic(err) }
+	cmd.parse(['cmd', '--string', 'foo', '--int', '42']) ?
 }
 
-fn test_if_flag_gets_set_in_subcommand() {
+fn test_if_flag_gets_set_in_subcommand() ? {
 	mut cmd := &Command{
 		name: 'cmd'
 	}
@@ -275,10 +279,10 @@ fn test_if_flag_gets_set_in_subcommand() {
 		name: 'string'
 	})
 	cmd.add_command(subcmd)
-	cmd.parse(['cmd', 'subcmd', '--string', 'foo']) or { panic(err) }
+	cmd.parse(['cmd', 'subcmd', '--string', 'foo']) ?
 }
 
-fn test_if_global_flag_gets_set_in_subcommand() {
+fn test_if_global_flag_gets_set_in_subcommand() ? {
 	mut cmd := &Command{
 		name: 'cmd'
 	}
@@ -291,10 +295,10 @@ fn test_if_global_flag_gets_set_in_subcommand() {
 		name: 'subcmd'
 		execute: string_flag_is_set_fn
 	})
-	cmd.parse(['cmd', '--string', 'foo', 'subcmd']) or { panic(err) }
+	cmd.parse(['cmd', '--string', 'foo', 'subcmd']) ?
 }
 
-fn test_if_combined_bool_flags_gets_set() {
+fn test_if_combined_bool_flags_gets_set() ? {
 	mut cmd := &Command{
 		name: 'cmd'
 	}
@@ -309,15 +313,15 @@ fn test_if_combined_bool_flags_gets_set() {
 		abbrev: 'b'
 	})
 
-	cmd.parse(['cmd']) or { panic(err) }
+	cmd.parse(['cmd']) ?
 
-	assert flag_a.get_bool() or { panic(err) } == false
-	assert flag_b.get_bool() or { panic(err) } == false
+	assert flag_a.get_bool() ? == false
+	assert flag_b.get_bool() ? == false
 
-	cmd.parse(['cmd', '-ab']) or { panic(err) }
+	cmd.parse(['cmd', '-ab']) ?
 
-	assert flag_a.get_bool() or { panic(err) } == true
-	assert flag_b.get_bool() or { panic(err) } == true
+	assert flag_a.get_bool() ? == true
+	assert flag_b.get_bool() ? == true
 }
 
 // Helper functions

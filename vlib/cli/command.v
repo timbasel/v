@@ -5,7 +5,7 @@ module cli
 [heap]
 pub struct Command {
 pub mut:
-	name        string
+	name        string              [required]
 	aliases     []string
 	usage       string
 	description string
