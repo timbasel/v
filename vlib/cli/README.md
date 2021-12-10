@@ -8,13 +8,14 @@ The `cli` module provides a declarative API for building modern commandline appl
 - POSIX-compliant short and long flags by default
 - Support for single-dash long flags
 - Global and required flags
+- Custom Validators
 - Automatic help generation
 <!-- Future Goals: -->
-<!-- - Custom validators -->
+<!-- - Predefined validators (will require closures, which are currently not stable on all platforms) -->
 <!-- - Automatic man page generation -->
 <!-- - Automatic shell autocomplete generation for bash, zsh, fish and powershell -->
 <!-- - Intelligent error suggestions -->
-<!-- - Integration with `config` module -->
+<!-- - Integration with a e.g. `config` module that mimicks the synergy between the `spf13/cobra` and `spf13/viper` go packages -->
 
 ## Usage
 
@@ -150,4 +151,66 @@ $ cmd start
 Starting server...
 $ cmd stop
 Stopping server...
+```
+
+Validators:
+
+```
+module main
+
+import cli { Command, Flag }
+import os
+import time
+
+fn main() {
+	mut cmd := &Command{
+		name: 'cmd'
+		usage: '<path>'
+		validate: fn (cmd &Command) ? {
+			if cmd.args.len != 1 {
+				return error('Command `$cmd.name` expects exactly 1 argument (got: $cmd.args)')
+			}
+			if !os.exists(cmd.args[0]) {
+				return error('No file found at `${cmd.args[0]}`')
+			}
+		}
+		execute: cmd_fn
+	}
+	cmd.add_flag(&Flag{
+		kind: .int
+		name: 'year'
+		abbrev: 'y'
+		required: true
+		validate: fn (flag &Flag) ? {
+			year := flag.get_int() ?
+			if year > time.now().year {
+				return error('Flag `$flag.name` can\'t be in the future (got: $year)')
+			}
+		}
+	})
+
+	cmd.parse(os.args) or {
+		println(err)
+		exit(1)
+	}
+}
+
+fn cmd_fn(cmd &Command) ? {
+	year := cmd.flags.get_int('year') ?
+	content := os.read_file(cmd.args[0]) ?
+	println('Content: $content')
+	println('Year: $year')
+}
+```
+
+```
+$ cmd --year 2018 ./non_existant_file.txt
+No file found at `./non_existant_file.txt`
+
+$ cmd --year 2042 ./existing_file.txt
+Flag `year` can't be in the future (got: 2042)
+
+$ cmd --year 2021 ./existing_file.text
+Content: Test
+Year: 2020
 ```

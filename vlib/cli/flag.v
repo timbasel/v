@@ -1,6 +1,34 @@
 module cli
 
-type FlagType = []bool | []f64 | []int | []string | bool | f64 | int | string
+type FlagValue = []f64 | []int | []string | bool | f64 | int | string
+
+fn (value &FlagValue) str() string {
+	match value {
+		bool { return value.str() }
+		int { return value.str() }
+		f64 { return value.str() }
+		string { return value }
+		[]int { return value.str() }
+		[]f64 { return value.str() }
+		[]string { return value.str() }
+	}
+}
+
+fn (value &FlagValue) undefined() bool {
+	return value.type_name().split(' ')[0] == 'unknown'
+}
+
+fn (value &FlagValue) to_kind() FlagKind {
+	match value {
+		bool { return .bool }
+		int { return .int }
+		f64 { return .float }
+		string { return .string }
+		[]int { return .int_array }
+		[]f64 { return .float_array }
+		[]string { return .string_array }
+	}
+}
 
 pub enum FlagKind {
 	bool
@@ -18,29 +46,25 @@ pub enum FlagKind {
 [heap]
 pub struct Flag {
 pub mut:
-	kind        FlagKind [required]
-	name        string   [required]
+	kind        FlagKind          [required]
+	name        string            [required]
 	aliases     []string
 	abbrev      string
 	description string
 	global      bool
 	required    bool
-	default     FlagType
+	default     FlagValue
+	validate    fn (flag &Flag) ?
 mut:
-	value FlagType
+	value FlagValue
 	found bool
 }
 
-fn (flag &Flag) value_undefined() bool {
-	return flag.value.type_name().split(' ')[0] == 'unknown'
-}
-
-fn (flag &Flag) default_undefined() bool {
-	return flag.default.type_name().split(' ')[0] == 'unknown'
-}
-
-fn (mut flag Flag) setup() {
-	if !flag.default_undefined() {
+fn (mut flag Flag) setup() ? {
+	if !flag.default.undefined() {
+		if flag.default.to_kind() != flag.kind {
+			return error('CLI Error: kind of flag `$flag.name` does not match default value type')
+		}
 		flag.value = flag.default
 	} else {
 		match flag.kind {
@@ -55,34 +79,38 @@ fn (mut flag Flag) setup() {
 	}
 }
 
-fn (flags []&Flag) setup() {
+fn (flags []&Flag) setup() ? {
 	for i in 0 .. flags.len {
 		mut flag := flags[i]
-		if flag.value_undefined() {
-			flag.setup()
+		if flag.value.undefined() {
+			flag.setup() ?
 		}
 	}
 }
 
-// parses the value as the specified flag type and returns the number of parsed arguments
+// parses the arguments as the specified flag kind and returns the number of parsed arguments
 fn (mut flag Flag) parse(args []string) ?int {
+	mut i := 1
 	match flag.kind {
 		.bool { flag.parse_bool(args[0]) ? }
 		.int { flag.parse_int(args[0]) ? }
 		.float { flag.parse_float(args[0]) ? }
 		.string { flag.parse_string(args[0]) ? }
-		.int_array { return flag.parse_int_array(args) }
-		.float_array { return flag.parse_float_array(args) }
-		.string_array { return flag.parse_string_array(args) }
+		.int_array { i = flag.parse_int_array(args) ? }
+		.float_array { i = flag.parse_float_array(args) ? }
+		.string_array { i = flag.parse_string_array(args) ? }
 	}
-	return 1
+	if !isnil(flag.validate) {
+		flag.validate(flag) ?
+	}
+	return i
 }
 
 fn (flags []&Flag) parse(args []string, strict bool) ?int {
 	if args.len == 0 {
 		return error('cli error: no arguments given to parse')
 	}
-	flags.setup()
+	flags.setup() ?
 
 	split := args[0].split_nth('=', 2)
 	mut arg := split[0]

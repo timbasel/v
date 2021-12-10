@@ -18,6 +18,7 @@ pub mut:
 	usage       string
 	description string
 	version     string
+	validate    fn (cmd &Command) ?
 	execute     fn (cmd &Command) ?
 
 	strict_flags    bool = true
@@ -106,7 +107,7 @@ pub fn (mut cmd Command) add_flags(flags []&Flag) {
 
 pub fn (mut cmd Command) parse(args []string) ? {
 	if cmd.is_root() {
-		cmd.setup()
+		cmd.setup() ?
 	}
 
 	mut i := 1 // skip program name
@@ -145,6 +146,10 @@ pub fn (mut cmd Command) parse(args []string) ? {
 	cmd.check_default_flags() ?
 	cmd.check_required_flags() ?
 
+	if !isnil(cmd.validate) {
+		cmd.validate(cmd) ?
+	}
+
 	if !isnil(cmd.execute) {
 		cmd.execute(cmd) ?
 	} else if cmd.commands.len > 0 {
@@ -152,14 +157,14 @@ pub fn (mut cmd Command) parse(args []string) ? {
 	}
 }
 
-fn (mut cmd Command) setup() {
+fn (mut cmd Command) setup() ? {
 	if !cmd.disable_flags {
 		cmd.add_default_flags()
 	}
 	cmd.add_default_commands()
 
 	for mut flag in cmd.flags {
-		flag.setup()
+		flag.setup() ?
 	}
 
 	if cmd.sort_flags {
@@ -177,7 +182,7 @@ fn (mut cmd Command) setup() {
 			subcmd.add_flag(global_flag)
 		}
 
-		subcmd.setup()
+		subcmd.setup() ?
 	}
 }
 

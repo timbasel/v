@@ -99,14 +99,17 @@ pub fn (cmd &Command) help_message() string {
 				abbrev_indent := ' '.repeat(abbrev_len)
 				flag_name = '$abbrev_indent$prefix$flag.name'
 			}
-			mut required := ''
+			mut annotations := ''
 			if flag.required {
-				required = ' (required)'
+				annotations += ' (required)'
+			}
+			if !flag.default.undefined() {
+				annotations += ' (default: $flag.default)'
 			}
 			base_indent := ' '.repeat(cli.base_indent_len)
 			description_indent := ' '.repeat(name_len - flag_name.len)
 			help += '$base_indent$flag_name$description_indent' +
-				pretty_description(flag.description + required, cli.base_indent_len + name_len) +
+				pretty_description(flag.description + annotations, cli.base_indent_len + name_len) +
 				'\n'
 		}
 	}

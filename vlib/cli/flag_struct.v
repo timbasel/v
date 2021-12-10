@@ -30,8 +30,6 @@ pub fn (mut cmd Command) add_flag_struct<T>() {
 			} $else $if field.typ is []string {
 				flag.kind = .string_array
 				flag.default = default_struct.$(field.name)
-			} $else {
-				panic('cli error: invalid flag type')
 			}
 
 			for attr in field.attrs {
