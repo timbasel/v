@@ -107,15 +107,15 @@ fn test_if_long_int_array_flag_parses() ? {
 	flags.parse([''], strict) ?
 	assert flag.get_int_array() ? == []
 
-	flag.setup() // clear array
+	flag.setup() ? // clear array
 	flags.parse(['--flag=1,2'], strict) ?
 	assert flag.get_int_array() ? == [1, 2]
 
-	flag.setup() // clear array
+	flag.setup() ? // clear array
 	flags.parse(['--flag', '3,4'], strict) ?
 	assert flag.get_int_array() ? == [3, 4]
 
-	flag.setup() // clear array
+	flag.setup() ? // clear array
 	flags.parse(['--flag', '5,', '6'], strict) ?
 	assert flag.get_int_array() ? == [5, 6]
 }
@@ -130,15 +130,15 @@ fn test_if_custom_int_array_flag_parses() ? {
 	flags.parse([''], strict) ?
 	assert flag.get_int_array() ? == []
 
-	flag.setup() // clear array
+	flag.setup() ? // clear array
 	flags.parse(['-flag=1,2'], strict) ?
 	assert flag.get_int_array() ? == [1, 2]
 
-	flag.setup() // clear array
+	flag.setup() ? // clear array
 	flags.parse(['-flag', '3,4'], strict) ?
 	assert flag.get_int_array() ? == [3, 4]
 
-	flag.setup() // clear array
+	flag.setup() ? // clear array
 	flags.parse(['-flag', '5,', '6'], strict) ?
 	assert flag.get_int_array() ? == [5, 6]
 }
@@ -154,15 +154,15 @@ fn test_if_abbrev_int_array_flag_parses() ? {
 	flags.parse([''], strict) ?
 	assert flag.get_int_array() ? == []
 
-	flag.setup() // clear array
+	flag.setup() ? // clear array
 	flags.parse(['-f=1,2'], strict) ?
 	assert flag.get_int_array() ? == [1, 2]
 
-	flag.setup() // clear array
+	flag.setup() ? // clear array
 	flags.parse(['-f', '3,4'], strict) ?
 	assert flag.get_int_array() ? == [3, 4]
 
-	flag.setup() // clear array
+	flag.setup() ? // clear array
 	flags.parse(['-f5,6'], strict) ?
 	assert flag.get_int_array() ? == [5, 6]
 }
@@ -178,11 +178,11 @@ fn test_if_aliased_int_array_flag_parses() ? {
 	flags.parse([''], strict) ?
 	assert flag.get_int_array() ? == []
 
-	flag.setup() // clear array
+	flag.setup() ? // clear array
 	flags.parse(['--foo=1,2'], strict) ?
 	assert flag.get_int_array() ? == [1, 2]
 
-	flag.setup() // clear array
+	flag.setup() ? // clear array
 	flags.parse(['--bar', '3,4'], strict) ?
 	assert flag.get_int_array() ? == [3, 4]
 }
@@ -208,4 +208,3 @@ fn test_if_int_array_default_value_is_set() ? {
 	flags.parse([''], strict) ?
 	assert flag.get_int_array() ? == [1234, 5678]
 }
-

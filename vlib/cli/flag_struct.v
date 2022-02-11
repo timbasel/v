@@ -81,7 +81,7 @@ pub fn (flags []&Flag) get_struct<T>() ?T {
 			} $else $if field.typ is []string {
 				res.$(field.name) = flag.get_string_array() ?
 			} $else {
-				return error('cli error: invalid flag type')
+				return cli_error('invalid flag type')
 			}
 		}
 	}

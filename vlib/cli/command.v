@@ -62,15 +62,15 @@ pub fn (cmd &Command) full_name() string {
 // add_command adds a subcommand to the commands; returns reference of the provided subcommand
 pub fn (mut cmd Command) add_command(subcmd &Command) &Command {
 	if cmd.name == '' {
-		panic("cli error: command name can't be empty")
+		cli_panic("command name can't be empty")
 	} else if cmd.name.contains(' ') {
-		panic('cli error: comand name must be a single word')
+		cli_panic('comand name must be a single word')
 	} else if cmd.commands.contains(subcmd.name) {
-		panic('cli error: Command with the name `$subcmd.name` already exists')
+		cli_panic('Command with the name `$subcmd.name` already exists')
 	}
 	for alias in subcmd.aliases {
 		if cmd.commands.contains(alias) {
-			panic('cli error: Command with the name `$alias` already exists')
+			cli_panic('Command with the name `$alias` already exists')
 		}
 	}
 	cmd.commands << subcmd
@@ -87,11 +87,11 @@ pub fn (mut cmd Command) add_commands(subcmds []&Command) {
 // add_flag adds a flag to the command; returns reference of the provided flag
 pub fn (mut cmd Command) add_flag(flag &Flag) &Flag {
 	if cmd.flags.contains(flag.name) || cmd.flags.contains_abbrev(flag.abbrev) {
-		panic('Flag with the name `$flag.name` already exists')
+		cli_panic('Flag with the name `$flag.name` already exists')
 	}
 	for alias in flag.aliases {
 		if cmd.flags.contains(alias) || cmd.flags.contains_abbrev(alias) {
-			panic('Flag with the name `$flag.name` already exists')
+			cli_panic('Flag with the name `$flag.name` already exists')
 		}
 	}
 	cmd.flags << flag
@@ -119,7 +119,7 @@ pub fn (mut cmd Command) parse(args []string) ? {
 				println('$cmd.name - found command: $arg')
 			}
 			mut subcmd := cmd.commands.get(arg) or {
-				panic('cli error: failed to get command `$arg` that should exist')
+				cli_panic('failed to get command `$arg` that should exist')
 			}
 			return subcmd.parse(args[i..])
 		} else if arg == '--' { // flag terminator
@@ -227,7 +227,7 @@ fn (cmd &Command) check_default_flags() ? {
 fn (cmd &Command) check_required_flags() ? {
 	for flag in cmd.flags {
 		if flag.required && !flag.found {
-			return error('cli error: flag `$flag.name` is required by `$cmd.full_name()`')
+			return cli_error('flag `$flag.name` is required by `$cmd.full_name()`')
 		}
 	}
 }
@@ -249,10 +249,34 @@ fn (cmds []&Command) get(name string) ?&Command {
 			return cmd
 		}
 	}
-	return error('cli error: no command `$name` found')
+	return no_command_found_error(name)
 }
 
 fn (cmds []&Command) contains(name string) bool {
 	cmds.get(name) or { return false }
 	return true
+}
+
+struct CLIError {
+	Error
+	msg string
+}
+
+fn (err CLIError) msg() string {
+	return 'cli error: $err.msg'
+}
+
+fn cli_error(msg string) IError {
+	return CLIError{ 
+		msg: msg
+	}
+}
+
+[noreturn]
+fn cli_panic(msg string) {
+	panic('cli panic: $msg')
+}
+
+fn no_command_found_error(name string) IError {
+	return cli_error('no command `$name` found')
 }

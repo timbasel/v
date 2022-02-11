@@ -1,13 +1,13 @@
 module cli
 
 pub fn (flags []&Flag) get_bool(name string) ?bool {
-	flag := flags.get(name) or { return error('cli error: no flag `$name` found') }
+	flag := flags.get(name) or { return flag_not_found_error(name) }
 	return flag.get_bool()
 }
 
 pub fn (flag &Flag) get_bool() ?bool {
 	if flag.kind != .bool {
-		return error('cli error: tried to get `bool` value of `$flag.name`, which is of kind `$flag.kind`')
+		return invalid_flag_kind_error(flag, .bool)
 	}
 	return flag.value as bool
 }

@@ -3,13 +3,13 @@ module cli
 import encoding.csv
 
 pub fn (flags []&Flag) get_string(name string) ?string {
-	flag := flags.get(name) or { return error('cli error: no flag `$name` found') }
+	flag := flags.get(name) or { return flag_not_found_error(name) }
 	return flag.get_string()
 }
 
 pub fn (flag &Flag) get_string() ?string {
 	if flag.kind != .string {
-		return error('cli error: tried to get `string` value of `$flag.name`, which is of kind `$flag.kind`')
+		return invalid_flag_kind_error(flag, .string)
 	}
 	return flag.value as string
 }
@@ -19,13 +19,13 @@ fn (mut flag Flag) parse_string(arg string) ? {
 }
 
 pub fn (flags []&Flag) get_string_array(name string) ?[]string {
-	flag := flags.get(name) or { return error('cli error: no flag `$name` found') }
+	flag := flags.get(name) or { return flag_not_found_error(name) }
 	return flag.get_string_array()
 }
 
 pub fn (flag &Flag) get_string_array() ?[]string {
 	if flag.kind != .string_array {
-		return error('cli error: tried to get `string_array` value of `$flag.name`, which is of kind `$flag.kind`')
+		return invalid_flag_kind_error(flag, .string_array)
 	}
 	return flag.value as []string
 }
@@ -40,7 +40,7 @@ fn (mut flag Flag) parse_string_array(args []string) ?int {
 
 			mut reader := csv.new_reader(arg + '\n')
 			split := reader.read() or {
-				return error('cli error: failed to parse string array flag `$flag.name`: $err')
+				return cli_error('failed to parse string array flag `$flag.name`: $err')
 			}.filter(it.len > 0)
 
 			flag.value << split

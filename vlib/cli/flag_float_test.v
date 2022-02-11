@@ -107,15 +107,15 @@ fn test_if_long_float_array_flag_parses() ? {
 	flags.parse([''], strict) ?
 	assert flag.get_float_array() ? == []
 
-	flag.setup() // clear array
+	flag.setup() ? // clear array
 	flags.parse(['--flag=1.1,2.2'], strict) ?
 	assert flag.get_float_array() ? == [1.1, 2.2]
 
-	flag.setup() // clear array
+	flag.setup() ? // clear array
 	flags.parse(['--flag', '3.3,4.4'], strict) ?
 	assert flag.get_float_array() ? == [3.3, 4.4]
 
-	flag.setup() // clear array
+	flag.setup() ? // clear array
 	flags.parse(['--flag', '5.5,', '6.6'], strict) ?
 	assert flag.get_float_array() ? == [5.5, 6.6]
 }
@@ -130,15 +130,15 @@ fn test_if_custom_float_array_flag_parses() ? {
 	flags.parse([''], strict) ?
 	assert flag.get_float_array() ? == []
 
-	flag.setup() // clear array
+	flag.setup() ? // clear array
 	flags.parse(['-flag=1.1,2.2'], strict) ?
 	assert flag.get_float_array() ? == [1.1, 2.2]
 
-	flag.setup() // clear array
+	flag.setup() ? // clear array
 	flags.parse(['-flag', '3.3,4.4'], strict) ?
 	assert flag.get_float_array() ? == [3.3, 4.4]
 
-	flag.setup() // clear array
+	flag.setup() ? // clear array
 	flags.parse(['-flag', '5.5,', '6.6'], strict) ?
 	assert flag.get_float_array() ? == [5.5, 6.6]
 }
@@ -154,15 +154,15 @@ fn test_if_abbrev_float_array_flag_parses() ? {
 	flags.parse([''], strict) ?
 	assert flag.get_float_array() ? == []
 
-	flag.setup() // clear array
+	flag.setup() ? // clear array
 	flags.parse(['-f=1.1,2.2'], strict) ?
 	assert flag.get_float_array() ? == [1.1, 2.2]
 
-	flag.setup() // clear array
+	flag.setup() ? // clear array
 	flags.parse(['-f', '3.3,4.4'], strict) ?
 	assert flag.get_float_array() ? == [3.3, 4.4]
 
-	flag.setup() // clear array
+	flag.setup() ? // clear array
 	flags.parse(['-f5.5,6.6'], strict) ?
 	assert flag.get_float_array() ? == [5.5, 6.6]
 }
@@ -178,11 +178,11 @@ fn test_if_aliased_float_array_flag_parses() ? {
 	flags.parse([''], strict) ?
 	assert flag.get_float_array() ? == []
 
-	flag.setup() // clear array
+	flag.setup() ? // clear array
 	flags.parse(['--foo=1.1,2.2'], strict) ?
 	assert flag.get_float_array() ? == [1.1, 2.2]
 
-	flag.setup() // clear array
+	flag.setup() ? // clear array
 	flags.parse(['--bar', '3.3,4.4'], strict) ?
 	assert flag.get_float_array() ? == [3.3, 4.4]
 }
@@ -208,4 +208,3 @@ fn test_if_float_array_default_value_is_set() ? {
 	flags.parse([''], strict) ?
 	assert flag.get_float_array() ? == [1.2345, 6.789]
 }
-

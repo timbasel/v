@@ -63,7 +63,7 @@ mut:
 fn (mut flag Flag) setup() ? {
 	if !flag.default.undefined() {
 		if flag.default.to_kind() != flag.kind {
-			return error('CLI Error: kind of flag `$flag.name` does not match default value type')
+			return cli_error('kind of flag `$flag.name` does not match default value type')
 		}
 		flag.value = flag.default
 	} else {
@@ -108,7 +108,7 @@ fn (mut flag Flag) parse(args []string) ?int {
 
 fn (flags []&Flag) parse(args []string, strict bool) ?int {
 	if args.len == 0 {
-		return error('cli error: no arguments given to parse')
+		return cli_error('no arguments given to parse')
 	}
 	flags.setup() ?
 
@@ -121,7 +121,7 @@ fn (flags []&Flag) parse(args []string, strict bool) ?int {
 				if !strict {
 					return 0 // skip undefined flag
 				}
-				return error('cli error: no flag `$arg` found')
+				return flag_not_found_error(arg) 
 			}
 		}
 		flag.found = true
@@ -136,7 +136,7 @@ fn (flags []&Flag) parse(args []string, strict bool) ?int {
 			// --flag arg0 arg1 ...
 			return flag.parse(args[1..])
 		} else {
-			return error('cli error: flag `$flag.name` requires an argument value')
+			return cli_error('flag `$flag.name` requires an argument value')
 		}
 		return 0
 	} else if arg.starts_with('-') {
@@ -156,7 +156,7 @@ fn (flags []&Flag) parse(args []string, strict bool) ?int {
 				// -flag arg0 arg1 ...
 				return flag.parse(args[1..])
 			} else {
-				return error('cli error: flag `$flag.name` requires an argument value')
+				return cli_error('flag `$flag.name` requires an argument value')
 			}
 			return 0
 		} else { // short flag
@@ -166,7 +166,7 @@ fn (flags []&Flag) parse(args []string, strict bool) ?int {
 				if !strict {
 					return 0 // skip undefined flag
 				}
-				return error('cli error: no flag `$arg` found')
+				return flag_not_found_error(arg)
 			}
 			flag.found = true
 
@@ -183,10 +183,10 @@ fn (flags []&Flag) parse(args []string, strict bool) ?int {
 						if !strict {
 							return 0 // skip undefined flag
 						}
-						return error('cli error: no flag `$arg` found')
+						return flag_not_found_error(arg)
 					}
 					if flag.kind != .bool {
-						return error('cli error: can not combine non boolean flags')
+						return cli_error('can not combine non boolean flags')
 					}
 					flag.found = true
 					flag.parse(['true']) ?
@@ -199,7 +199,7 @@ fn (flags []&Flag) parse(args []string, strict bool) ?int {
 				// -fvalue
 				flag.parse([arg[1..]]) ?
 			} else {
-				return error('cli error: flag `$flag.name` (abbrev: `$flag.abbrev`) requires an argument value')
+				return cli_error('flag `$flag.name` (abbrev: `$flag.abbrev`) requires an argument value')
 			}
 		}
 	}
@@ -214,12 +214,12 @@ fn (flags []&Flag) get(name string) ?&Flag {
 			return flag
 		}
 	}
-	return error('cli error: no flag `$name` found')
+	return cli_error('no flag `$name` found')
 }
 
 fn (flags []&Flag) get_abbrev(abbrev string) ?&Flag {
 	if abbrev == '' {
-		return error('cli error: no abbrev given.')
+		return cli_error('no abbrev given.')
 	}
 
 	for flag in flags {
@@ -227,7 +227,7 @@ fn (flags []&Flag) get_abbrev(abbrev string) ?&Flag {
 			return flag
 		}
 	}
-	return error('cli error: no flag `$abbrev` found')
+	return cli_error('no flag `$abbrev` found')
 }
 
 fn (flags []&Flag) contains(name string) bool {
@@ -238,4 +238,20 @@ fn (flags []&Flag) contains(name string) bool {
 fn (flags []&Flag) contains_abbrev(abbrev string) bool {
 	flags.get_abbrev(abbrev) or { return false }
 	return true
+}
+
+fn flag_not_found_error(name string) IError {
+	return cli_error('no flag `$name` found')
+}
+
+fn flag_required_error(flag &Flag, cmd &Command) IError {
+	return cli_error('flag `$flag.name` is required by `$cmd.full_name()`')
+}
+
+fn invalid_flag_kind_error(flag &Flag, expected_kind FlagKind) IError {
+	return cli_error('tried to get `$expected_kind` value of `$flag.name`, which is of kind `$flag.kind`')
+}
+
+fn invalid_flag_format_error(value string, kind FlagKind) IError {
+	return cli_error('invalid $kind format: `$value`')
 }

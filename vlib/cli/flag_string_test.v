@@ -107,15 +107,15 @@ fn test_if_long_string_array_flag_parses() ? {
 	flags.parse([''], strict) ?
 	assert flag.get_string_array() ? == []
 
-	flag.setup() // clear array
+	flag.setup() ? // clear array
 	flags.parse(['--flag=foo,bar'], strict) ?
 	assert flag.get_string_array() ? == ['foo', 'bar']
 
-	flag.setup() // clear array
+	flag.setup() ? // clear array
 	flags.parse(['--flag', 'hello,world'], strict) ?
 	assert flag.get_string_array() ? == ['hello', 'world']
 
-	flag.setup() // clear array
+	flag.setup() ? // clear array
 	flags.parse(['--flag', 'alice,', 'bob'], strict) ?
 	assert flag.get_string_array() ? == ['alice', 'bob']
 }
@@ -130,15 +130,15 @@ fn test_if_custom_string_array_flag_parses() ? {
 	flags.parse([''], strict) ?
 	assert flag.get_string_array() ? == []
 
-	flag.setup() // clear array
+	flag.setup() ? // clear array
 	flags.parse(['-flag=foo,bar'], strict) ?
 	assert flag.get_string_array() ? == ['foo', 'bar']
 
-	flag.setup() // clear array
+	flag.setup() ? // clear array
 	flags.parse(['-flag', 'hello,world'], strict) ?
 	assert flag.get_string_array() ? == ['hello', 'world']
 
-	flag.setup() // clear array
+	flag.setup() ? // clear array
 	flags.parse(['-flag', 'alice,', 'bob'], strict) ?
 	assert flag.get_string_array() ? == ['alice', 'bob']
 }
@@ -154,15 +154,15 @@ fn test_if_abbrev_string_array_flag_parses() ? {
 	flags.parse([''], strict) ?
 	assert flag.get_string_array() ? == []
 
-	flag.setup() // clear array
+	flag.setup() ? // clear array
 	flags.parse(['-f=foo,bar'], strict) ?
 	assert flag.get_string_array() ? == ['foo', 'bar']
 
-	flag.setup() // clear array
+	flag.setup() ? // clear array
 	flags.parse(['-f', 'hello,world'], strict) ?
 	assert flag.get_string_array() ? == ['hello', 'world']
 
-	flag.setup() // clear array
+	flag.setup() ? // clear array
 	flags.parse(['-falice,bob'], strict) ?
 	assert flag.get_string_array() ? == ['alice', 'bob']
 }
@@ -178,11 +178,11 @@ fn test_if_aliased_string_array_flag_parses() ? {
 	flags.parse([''], strict) ?
 	assert flag.get_string_array() ? == []
 
-	flag.setup() // clear array
+	flag.setup() ? // clear array
 	flags.parse(['--foo=foo,bar'], strict) ?
 	assert flag.get_string_array() ? == ['foo', 'bar']
 
-	flag.setup() // clear array
+	flag.setup() ? // clear array
 	flags.parse(['--bar', 'hello,world'], strict) ?
 	assert flag.get_string_array() ? == ['hello', 'world']
 }
