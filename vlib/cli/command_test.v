@@ -324,6 +324,65 @@ fn test_if_combined_bool_flags_gets_set() ? {
 	assert flag_b.get_bool() ? == true
 }
 
+fn test_command_validators() {
+	$if x64 && !windows {
+		mut cmd := &Command{
+			name: 'cmd'
+		}
+
+		cmd.validate = cli.no_args
+		cmd.args = []
+		cmd.parse(['cmd']) or {
+			assert false // should parse without error
+		}
+		cmd.args = []
+		cmd.parse(['cmd', 'foo', 'bar']) or { assert err.msg().contains('does not take any arguments') }
+
+		cmd.validate = cli.minimum_number_of_args(1)
+		cmd.args = []
+		cmd.parse(['cmd']) or { assert err.msg().contains('expects at least') }
+		cmd.args = []
+		cmd.parse(['cmd', 'foo']) or {
+			assert false // should parse without error
+		}
+
+		cmd.validate = cli.maximum_number_of_args(2)
+		cmd.args = []
+		cmd.parse(['cmd', 'foo']) or {
+			assert false // should parse without error
+		}
+		cmd.args = []
+		cmd.parse(['cmd', 'foo', 'bar', 'baz']) or { assert err.msg().contains('expects at most') }
+
+		cmd.validate = cli.exact_number_of_args(2)
+		cmd.args = []
+		cmd.parse(['cmd', 'foo', 'bar']) or {
+			assert false // should parse without error
+		}
+		cmd.args = []
+		cmd.parse(['cmd', 'foo']) or { assert err.msg().contains('expects exactly') }
+
+		cmd.validate = cli.number_of_args_between(1, 3)
+		cmd.args = []
+		cmd.parse(['cmd']) or { assert err.msg().contains('expects between') }
+		cmd.parse(['cmd', 'foo', 'bar']) or {
+			assert false // should parse without error
+		}
+
+		cmd.validate = cli.only_valid_args(['foo', 'bar'])
+		cmd.args = []
+		cmd.parse(['cmd']) or {
+			assert false // should parse without error
+		}
+		cmd.args = []
+		cmd.parse(['cmd', 'foo', 'bar']) or {
+			assert false // should parse without error
+		}
+		cmd.args = []
+		cmd.parse(['cmd', 'baz']) or { assert err.msg().contains('invalid argument `baz`') }
+	}
+}
+
 // Helper functions
 
 fn string_flag_is_set_fn(cmd &Command) ? {

@@ -121,7 +121,7 @@ fn (flags []&Flag) parse(args []string, strict bool) ?int {
 				if !strict {
 					return 0 // skip undefined flag
 				}
-				return flag_not_found_error(arg) 
+				return flag_not_found_error(arg)
 			}
 		}
 		flag.found = true

@@ -9,9 +9,9 @@ The `cli` module provides a declarative API for building modern commandline appl
 - Support for single-dash long flags
 - Global and required flags
 - Custom Validators
+- Predefined Validators (on x64 Unix-based architectures)
 - Automatic help generation
 <!-- Future Goals: -->
-<!-- - Predefined validators (will require closures, which are currently not stable on all platforms) -->
 <!-- - Automatic man page generation -->
 <!-- - Automatic shell autocomplete generation for bash, zsh, fish and powershell -->
 <!-- - Intelligent error suggestions -->
@@ -155,7 +155,7 @@ Stopping server...
 
 Validators:
 
-```
+```v
 module main
 
 import cli { Command, Flag }

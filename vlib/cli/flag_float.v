@@ -17,9 +17,7 @@ pub fn (flag &Flag) get_float() ?f64 {
 
 fn (mut flag Flag) parse_float(arg string) ? {
 	// TODO: check if argument is valid floating point number
-	flag.value = strconv.atof64(arg) or {
-		return invalid_flag_format_error(arg, .float)
-	}
+	flag.value = strconv.atof64(arg) or { return invalid_flag_format_error(arg, .float) }
 }
 
 pub fn (flags []&Flag) get_float_array(name string) ?[]f64 {

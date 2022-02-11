@@ -2,6 +2,8 @@ module cli
 
 import os
 
+type CmdFunction = fn (cmd &Command) ?
+
 pub fn new() &Command {
 	return &Command{
 		name: os.file_name(os.args[0])
@@ -13,13 +15,13 @@ pub fn new() &Command {
 [heap]
 pub struct Command {
 pub mut:
-	name        string              [required]
+	name        string      [required]
 	aliases     []string
 	usage       string
 	description string
 	version     string
-	validate    fn (cmd &Command) ?
-	execute     fn (cmd &Command) ?
+	validate    CmdFunction
+	execute     CmdFunction
 
 	strict_flags    bool = true
 	disable_help    bool
@@ -267,7 +269,7 @@ fn (err CLIError) msg() string {
 }
 
 fn cli_error(msg string) IError {
-	return CLIError{ 
+	return CLIError{
 		msg: msg
 	}
 }
